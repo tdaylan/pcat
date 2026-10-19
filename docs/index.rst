@@ -27,6 +27,9 @@ same sampler and persistence pipeline. Its transdimensional models infer the
 number and parameters of catalog elements jointly. Simulated and supplied data,
 population-level priors, posterior catalog summaries, convergence diagnostics,
 static figures, and posterior animations use a shared pipeline.
+An optional neural mixture-density proposal suggests catalog births while the
+same transdimensional sampler and Hastings correction retain the posterior
+target.
 
 .. image:: ../examples/pcat_posterior_samples.gif
    :alt: Posterior samples for Gaussian mixtures, point sources, strong lenses, and spectral lines

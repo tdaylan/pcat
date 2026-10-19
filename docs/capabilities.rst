@@ -97,8 +97,8 @@ Poisson image likelihood
 
 Point sources, extended emission, foreground light, and gravitational lenses
 are alternative model components within the same image-data likelihood. The
-catalog may contain one or several supported element populations; it does not
-change the likelihood family. With the default ``boolcondcatl=True``, final
+catalog may contain one or several supported element populations. The
+likelihood family remains unchanged. With the default ``boolcondcatl=True``, final
 processing creates a condensed catalog from the sampled catalogs before any
 optional association with a reference catalog.
 

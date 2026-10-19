@@ -7,11 +7,56 @@ from tdpy.numerics import logmeanexp
 
 
 def binomial_wilson_interval(successes, trials, z_score=1.0):
-    """Return the Wilson interval for a binomial proportion."""
+    """Return the Wilson interval for finite scalar binomial counts.
+
+    Counts must be unmasked integer-valued scalars. The confidence score must
+    be an unmasked positive finite real scalar.
+    Zero and full counts use closed-form limits to avoid cancellation.
+    Scores whose squares exceed binary64 range use reciprocal-score scaling.
+    Large trial counts use count scaling to avoid squaring the trial count.
+    """
+    scalars = []
+    for value in (successes, trials, z_score):
+        if np.ma.is_masked(value):
+            raise ValueError("Require valid binomial counts and a positive z_score.")
+        scalar = np.asarray(value)
+        if scalar.ndim != 0 or scalar.dtype.kind not in 'biuf' or not np.isfinite(scalar):
+            raise ValueError("Require valid binomial counts and a positive z_score.")
+        scalars.append(scalar.item())
+    successes, trials, z_score = scalars
+    if any(isinstance(count, (float, np.floating)) and count != np.floor(count)
+           for count in (successes, trials)):
+        raise ValueError("Require valid binomial counts and a positive z_score.")
+    successes, trials = int(successes), int(trials)
     if trials <= 0 or not 0 <= successes <= trials or z_score <= 0.0:
         raise ValueError("Require valid binomial counts and a positive z_score.")
     fraction = successes / trials
+    if z_score > np.sqrt(np.finfo(float).max):
+        scaled_trials = (trials / z_score) / z_score
+        complement = 1.0 - fraction
+        root = float(np.sqrt(1.0 + 4.0 * fraction * complement * scaled_trials))
+        lower = fraction**2 * scaled_trials / (0.5 + fraction * scaled_trials + 0.5 * root)
+        upper = 1.0 - complement**2 * scaled_trials / (0.5 + complement * scaled_trials + 0.5 * root)
+        return float(lower), float(upper)
+    if trials > np.sqrt(np.finfo(float).max):
+        scaled_score = z_score / trials**0.5
+        ratio = scaled_score**2
+        denominator = 1.0 + ratio
+        if successes == 0:
+            return 0.0, float(ratio / denominator)
+        if successes == trials:
+            return float(1.0 / denominator), 1.0
+        complement = (trials - successes) / trials
+        radius = float(np.hypot(np.sqrt(fraction) * np.sqrt(complement), scaled_score / 2.0))
+        spread = scaled_score * radius
+        upper_numerator = fraction + ratio / 2.0 + spread
+        lower = fraction * (fraction / upper_numerator)
+        return float(lower), float(upper_numerator / denominator)
     z_squared = z_score**2
+    if successes == 0:
+        return 0.0, float(z_squared / (trials + z_squared))
+    if successes == trials:
+        return float(trials / (trials + z_squared)), 1.0
     denominator = 1.0 + z_squared / trials
     center = (fraction + z_squared / (2.0 * trials)) / denominator
     half_width = z_score * np.sqrt(
@@ -20,11 +65,32 @@ def binomial_wilson_interval(successes, trials, z_score=1.0):
     return float(center - half_width), float(center + half_width)
 
 
+def _normalize_trace_scale(values):
+    """Rescale only extreme finite traces by an exact power of two."""
+    amplitude = np.max(np.abs(values))
+    if amplitude != 0.0 and (amplitude < np.sqrt(np.finfo(float).tiny)
+                            or amplitude > np.sqrt(np.finfo(float).max / values.size) / 2.0):
+        exponent = int(np.frexp(amplitude)[1])
+        with np.errstate(under='ignore'):
+            return np.ldexp(values, -exponent)
+    return values
+
+
 def gelman_rubin(chains):
-    """Return the potential scale reduction factor across parallel chains."""
-    values = np.asarray(chains, dtype=float)
-    if values.ndim != 2 or min(values.shape) < 2:
+    """Return the potential scale reduction factor across parallel chains.
+
+    Masked, nonfinite, nonreal, or undersized traces have an undefined result
+    (NaN). Missing samples are not filled or dropped.
+    Extreme magnitudes use the same binary normalization as autocorrelation.
+    """
+    if np.ma.is_masked(chains) or np.iscomplexobj(chains):
         return np.nan
+    values = np.asarray(chains, dtype=float)
+    if values.ndim != 2 or min(values.shape) < 2 or not np.isfinite(values).all():
+        return np.nan
+    if np.all(values == values[0]):
+        return np.inf if np.any(values[0] != values[0, 0]) else np.nan
+    values = _normalize_trace_scale(values)
     sample_count = values.shape[0]
     within = np.mean(np.var(values, axis=0, ddof=1))
     between = sample_count * np.var(np.mean(values, axis=0), ddof=1)
@@ -35,21 +101,32 @@ def gelman_rubin(chains):
 
 
 def autocorrelation_time(samples, typeverb=0, atcrtype='maxm', verbtype=None):
-    """Return correlation sequences and integrated times for a sampled series."""
-    values = np.asarray(samples, dtype=float)
+    """Return correlation sequences and integrated times for sampled series.
+
+    A masked, nonfinite, nonreal, or constant series has NaN outputs without
+    discarding valid neighboring series or filling or dropping samples.
+    Extreme scales use power-of-two normalization before forming products.
+    """
+    values = np.ma.asarray(samples)
     if values.ndim < 1 or values.shape[0] < 2:
         return np.full(values.shape[1:] + (1,), np.nan), np.full(values.shape[1:], np.nan)
     parameter_shape = values.shape[1:]
     flat = values.reshape(values.shape[0], -1)
     lag_count = max(1, values.shape[0] // 2)
-    correlations = np.empty((flat.shape[1], lag_count))
-    times = np.empty(flat.shape[1])
+    correlations = np.full((flat.shape[1], lag_count), np.nan)
+    times = np.full(flat.shape[1], np.nan)
     for parameter_index, series in enumerate(flat.T):
+        if np.ma.is_masked(series) or np.iscomplexobj(series):
+            continue
+        series = np.asarray(series, dtype=float)
+        if not np.isfinite(series).all():
+            continue
+        if np.all(series == series[0]):
+            continue
+        series = _normalize_trace_scale(series)
         centered = series - np.mean(series)
         variance = np.dot(centered, centered)
         if variance == 0.:
-            correlations[parameter_index] = np.nan
-            times[parameter_index] = np.nan
             continue
         correlation = np.correlate(centered, centered, mode='full')[series.size - 1:series.size - 1 + lag_count]
         correlation /= variance

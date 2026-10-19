@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from tdpy.util import save_figure
+from tdpy.plotting import apply_plot_theme, plot_background_colors
 
 from .diagnostics import (
     autocorrelation_time, binomial_wilson_interval, catalog_count_transitions, gelman_rubin,
@@ -27,13 +28,49 @@ def plot_lens_image_fit(
     pixel_scale_arcsec: float,
     typefileplot: str = "png",
 ) -> Path:
-    """Write observed, median-model, and standardized-residual lens maps."""
+    """Write observed, median-model, and standardized-residual lens maps.
+
+    Centered angular spans use columns for width and rows for height, retaining
+    the supplied finite positive scalar pixel scale for rectangular as well as
+    square cutouts. A masked pixel scale is not supported.
+    Observed images must be nonempty and two-dimensional. Models must also be
+    two-dimensional and broadcast only within the observed image shape.
+    Variance must broadcast to that shape and be finite and positive at
+    unmasked pixels. Explicit masked pixels retain their residual mask.
+    The shared count limit uses unmasked observed pixels, ignoring NaNs.
+    At least one observed pixel must be unmasked.
+    Two integer image inputs are subtracted exactly before conversion for
+    residual scaling; their displayed pixel arrays remain unchanged.
+    """
     if typefileplot not in ("png", "pdf"):
         raise ValueError("typefileplot must be 'png' or 'pdf'")
-    residual = (observed - model) / np.sqrt(variance)
-    half_width_arcsec = observed.shape[0] * pixel_scale_arcsec / 2.0  # [arcsec]
-    extent = (-half_width_arcsec, half_width_arcsec, -half_width_arcsec, half_width_arcsec)
-    count_limit = np.nanpercentile(observed, 99.5)
+    if np.ma.is_masked(pixel_scale_arcsec):
+        raise ValueError("pixel_scale_arcsec must not be masked")
+    scale = np.asarray(pixel_scale_arcsec)  # [arcsec pixel^-1]
+    if scale.ndim != 0 or scale.dtype.kind not in 'iuf' or not np.isfinite(scale) or scale <= 0:
+        raise ValueError("pixel_scale_arcsec must be a finite positive real scalar")
+    if observed.ndim != 2 or not observed.size or model.ndim != 2:
+        raise ValueError("Lens images must be nonempty two-dimensional arrays")
+    if np.broadcast_shapes(observed.shape, model.shape) != observed.shape:
+        raise ValueError("Lens-model shape must broadcast to the observed image shape")
+    variance_values = np.ma.asarray(variance).compressed()
+    if (variance_values.dtype.kind not in 'iuf' or not np.isfinite(variance_values).all()
+            or np.any(variance_values <= 0)):
+        raise ValueError("Unmasked lens-image variance must be finite and positive")
+    if np.broadcast_shapes(observed.shape, np.shape(variance)) != observed.shape:
+        raise ValueError("Lens-image variance must broadcast to the observed image shape")
+    if observed.dtype.kind in 'iu' and model.dtype.kind in 'iu':
+        difference = (observed.astype(object) - model.astype(object)).astype(float)
+    else:
+        difference = observed - model
+    residual = difference / np.sqrt(variance)
+    half_width_arcsec = observed.shape[1] * pixel_scale_arcsec / 2.0  # [arcsec]
+    half_height_arcsec = observed.shape[0] * pixel_scale_arcsec / 2.0  # [arcsec]
+    extent = (-half_width_arcsec, half_width_arcsec, -half_height_arcsec, half_height_arcsec)
+    observed_values = np.ma.asarray(observed).compressed()  # [electron pixel^-1]
+    if not observed_values.size:
+        raise ValueError("Observed lens image must contain at least one unmasked pixel")
+    count_limit = np.nanpercentile(observed_values, 99.5)  # [electron pixel^-1]
     figure, axes = plt.subplots(1, 3, figsize=(12, 4), constrained_layout=True)
     for axis, image, title, bounds, colorbar_label in zip(
         axes,
@@ -66,15 +103,35 @@ def plot_lens_parameter_recovery(
     typefileplot: str = "png",
     labels: tuple[str, ...] = ("Einstein radius [arcsec]", "Source x [arcsec]", "Source y [arcsec]"),
 ) -> Path:
-    """Write marginal lens-parameter distributions with injected values, three panels per row."""
+    """Write one marginal per sample column, three panels per row.
+
+    Draws must be a nonempty two-dimensional sample-by-parameter array.
+    Supply one injected value and one label per parameter column.
+    Injected values must be finite, real, and unmasked.
+    Each column must contain finite real unmasked samples. Histograms and
+    medians use the same unmasked samples independently for each parameter.
+    """
     if typefileplot not in ("png", "pdf"):
         raise ValueError("typefileplot must be 'png' or 'pdf'")
-    medians = np.median(draws, axis=0)
+    if draws.ndim != 2 or not draws.size:
+        raise ValueError("Lens-parameter draws must be a nonempty two-dimensional array")
+    if np.shape(true_parameters) != (draws.shape[1],) or len(labels) != draws.shape[1]:
+        raise ValueError("Supply one injected value and one label per parameter column")
+    if np.ma.is_masked(true_parameters):
+        raise ValueError("Injected lens parameters must be unmasked")
+    truth_values = np.asarray(true_parameters)
+    if truth_values.dtype.kind not in 'iuf' or not np.isfinite(truth_values).all():
+        raise ValueError("Injected lens parameters must be finite real values")
+    columns = [np.ma.asarray(draws[:, index]).compressed() for index in range(draws.shape[1])]
+    if any(not column.size or column.dtype.kind not in 'iuf' or not np.isfinite(column).all()
+           for column in columns):
+        raise ValueError("Each lens-parameter column must contain finite real unmasked samples")
+    medians = np.array([np.median(column) for column in columns])
     number_rows = int(np.ceil(len(labels) / 3))
     figure, axes = plt.subplots(number_rows, 3, figsize=(11, 3.3 * number_rows), constrained_layout=True,
                                 squeeze=False)
     for index, (axis, label) in enumerate(zip(axes.flat, labels)):
-        axis.hist(draws[:, index], bins=22, density=True, color="#007360", alpha=0.75,
+        axis.hist(columns[index], bins=22, density=True, color="#007360", alpha=0.75,
                   label="PCAT samples")
         axis.axvline(true_parameters[index], color="#A51417", linewidth=2,
                      label="Injected value")
@@ -93,32 +150,64 @@ def plot_detection_diagnostic(
     records: list[dict[str, float | int | bool]],
     output_path: Path,
     examples: dict[str, np.ndarray] | None = None,
+    detection_threshold: float = 0.5,
+    example_prefix: str | None = None,
 ) -> Path:
-    """Plot representative lens images and population detection results."""
+    """Plot lens images and rates using one shared posterior threshold.
+
+    Representative data, macro-model, and residual images must be nonempty
+    two-dimensional arrays on the same pixel grid.
+    Color limits use finite real unmasked pixels, with at least one per panel.
+    Select a supplied example by prefix, or retain the first sorted prefix.
+    Injected signal-to-noise values must be unmasked finite nonnegative reals.
+    """
     from .roman_lens import summarize_population
 
     output_path = Path(output_path)
     if output_path.suffix not in (".png", ".pdf"):
         raise ValueError("Output format must be 'png' or 'pdf'.")
+    summary = summarize_population(records, detection_threshold=detection_threshold)
     truth = np.array([record["has_subhalo"] for record in records], dtype=bool)
-    signal_to_noise = np.array(
-        [record["injected_signal_to_noise"] for record in records], dtype=float
-    )
+    signal_values = [record["injected_signal_to_noise"] for record in records]
+    if any(np.ma.is_masked(value) or np.ndim(value) != 0 or np.iscomplexobj(value)
+           for value in signal_values):
+        raise ValueError("Injected signal-to-noise values must be unmasked real scalars")
+    signal_to_noise = np.array(signal_values, dtype=float)
+    if not np.isfinite(signal_to_noise).all() or np.any(signal_to_noise < 0.0):
+        raise ValueError("Injected signal-to-noise values must be finite and nonnegative")
     probability = np.array([record["posterior_one"] for record in records], dtype=float)
-    summary = summarize_population(records)
 
+    if example_prefix is not None and not examples:
+        raise ValueError("example_prefix requires representative examples")
     if examples:
-        example_prefix = sorted(
+        example_prefixes = sorted(
             key.removesuffix("_data") for key in examples if key.endswith("_data")
-        )[0]
+        )
+        if not example_prefixes:
+            raise ValueError("Representative examples require a data image")
+        if example_prefix is None:
+            example_prefix = example_prefixes[0]
+        if example_prefix not in example_prefixes:
+            raise ValueError("example_prefix must identify a supplied representative data image")
         data = examples[f"{example_prefix}_data"]
         macro = examples[f"{example_prefix}_macro"]
         residual = examples[f"{example_prefix}_residual"]
+        image_shape = np.shape(data)
+        if (len(image_shape) != 2 or not all(image_shape)
+                or any(np.shape(image) != image_shape for image in (macro, residual))):
+            raise ValueError("Representative lens images must share a nonempty two-dimensional shape")
+        visible_pixels = [np.ma.asarray(image).compressed() for image in (data, macro, residual)]  # [electron pixel^-1]
+        if any(not pixels.size or pixels.dtype.kind not in 'iuf' or not np.isfinite(pixels).all()
+               for pixels in visible_pixels):
+            raise ValueError("Each representative image must contain finite real unmasked pixels")
+        data_pixels, macro_pixels, residual_pixels = visible_pixels  # [electron pixel^-1]
+        image_minimum = min(np.percentile(data_pixels, 1.0), np.percentile(macro_pixels, 1.0))  # [electron pixel^-1]
+        image_maximum = max(np.percentile(data_pixels, 99.5), np.percentile(macro_pixels, 99.5))  # [electron pixel^-1]
+        if residual_pixels.dtype.kind in 'iu':
+            residual_pixels = residual_pixels.astype(float)  # [electron pixel^-1]
+        residual_limit = np.max(np.abs(residual_pixels))  # [electron pixel^-1]
         figure, axes = plt.subplots(2, 2, figsize=(7.2, 6.4), facecolor="white")
         image_axes = axes.flat[:3]
-        image_minimum = min(np.percentile(data, 1.0), np.percentile(macro, 1.0))
-        image_maximum = max(np.percentile(data, 99.5), np.percentile(macro, 99.5))
-        residual_limit = np.max(np.abs(residual))
         panels = (
             (data, "Simulated detector input", "viridis", image_minimum, image_maximum),
             (macro, "Macro-lens model", "viridis", image_minimum, image_maximum),
@@ -143,7 +232,7 @@ def plot_detection_diagnostic(
         signal_to_noise[truth], probability[truth], color="#A51417", alpha=0.75, s=28,
         label="Injected perturber",
     )
-    axis.axhline(0.5, color="black", linestyle="--", linewidth=1.0, label="Detection threshold")
+    axis.axhline(detection_threshold, color="black", linestyle="--", linewidth=1.0, label="Detection threshold")
     axis.set_xlabel(r"Injected perturbation signal-to-noise [$\sigma$]")
     axis.set_ylabel(r"Posterior probability $P(N_{\rm sub}=1\mid d)$")
     axis.set_title("Catalog inference")
@@ -221,9 +310,10 @@ def plot_posterior_convergence(state, output_directory: Path, typefileplot: str 
     def save(figure, name):
         path = output_directory / f"{name}.{typefileplot}"
         figure.tight_layout()
+        apply_plot_theme(figure)
         print(f"Writing to {path}...")
         figure.savefig(path, dpi=300 if typefileplot == "png" else None,
-                       bbox_inches="tight", facecolor="white")
+                       bbox_inches="tight", facecolor=figure.get_facecolor())
         plt.close(figure)
         paths[name] = path
 
@@ -254,7 +344,7 @@ def plot_posterior_convergence(state, output_directory: Path, typefileplot: str 
             for chain_index in range(chain_count):
                 axis.plot(np.arange(correlation.shape[-1]), correlation[chain_index, index],
                           label=label if chain_index == 0 else None, alpha=0.75)
-        axis.axhline(0, color="black", lw=0.7)
+        axis.axhline(0, color=plot_background_colors()[1], lw=0.7)
         axis.set(xlabel="Lag [posterior samples]", ylabel="Autocorrelation")
         axis.set_xlim(0, max(1, correlation.shape[-1] - 1))
         axis.grid(False)
@@ -276,7 +366,7 @@ def plot_posterior_convergence(state, output_directory: Path, typefileplot: str 
         axes[0].bar(np.arange(len(names)), effective, color="#19796D")
         axes[0].set_ylabel("Approximate ESS [samples]")
         axes[1].plot(np.arange(len(names)), rhat, marker="o", color="#A64135")
-        axes[1].axhline(1.05, color="black", ls="--", lw=0.8)
+        axes[1].axhline(1.05, color=plot_background_colors()[1], ls="--", lw=0.8)
         axes[1].set_ylabel(r"Multi-chain $\hat R$")
         if not np.isfinite(rhat).any():
             axes[1].text(0.5, 0.5, "Multiple chains required", ha="center", va="center",
@@ -302,7 +392,7 @@ def plot_posterior_convergence(state, output_directory: Path, typefileplot: str 
         axes[0].bar(np.arange(len(names)), effective, color="#19796D")
         axes[0].set_ylabel("Approximate ESS [samples]")
         axes[1].plot(np.arange(len(names)), rhat, marker="o", color="#A64135")
-        axes[1].axhline(1.05, color="black", ls="--", lw=0.8)
+        axes[1].axhline(1.05, color=plot_background_colors()[1], ls="--", lw=0.8)
         if chain_count == 1:
             axes[1].text(0.5, 0.5, "Multiple chains required", transform=axes[1].transAxes,
                          ha="center", va="center")
@@ -664,10 +754,15 @@ def make_posterior_animation_collage(
     return output_path
 
 
-def plot_gelman_rubin(path, statistics, typefileplot='pdf', typeplotback='norm'):
-    """Save the convergence-statistic distribution for a PCAT posterior."""
+def plot_gelman_rubin(path, statistics, typefileplot='pdf', typeplotback=None):
+    """Save a nonempty finite real R-hat distribution without dropping values."""
+    if np.ma.is_masked(statistics) or np.iscomplexobj(statistics):
+        raise ValueError("R-hat statistics must be unmasked finite real values")
     values = np.asarray(statistics)
-    bins = np.linspace(1., np.max(values), 41)
+    if not values.size or values.dtype.kind not in 'iuf' or not np.isfinite(values).all():
+        raise ValueError("R-hat statistics must be nonempty finite real values")
+    limits = (min(1.0, np.min(values)), max(1.0, np.max(values)))
+    bins = np.histogram_bin_edges(values, bins=40, range=limits)
     figure, axis = plt.subplots()
     axis.hist(values, bins=bins)
     axis.set_title('Gelman-Rubin Convergence Test')
@@ -679,7 +774,7 @@ def plot_gelman_rubin(path, statistics, typefileplot='pdf', typeplotback='norm')
 
 
 def plot_autocorrelation(path, autocorrelation, correlation_time, strgextn='',
-                         typefileplot='pdf', typeplotback='norm'):
+                         typefileplot='pdf', typeplotback=None):
     """Save a sampled parameter's autocorrelation sequence."""
     values = np.asarray(autocorrelation).reshape(-1)
     figure, axis = plt.subplots(figsize=(6, 4))
@@ -715,9 +810,11 @@ def plot_grid(
     join=False,
     listvarbdraw=None,
     typefileplot="pdf",
+    typeplotback=None,
     **kwargs,
 ):
     """Plot all one- and two-dimensional projections of posterior samples."""
+    background, foreground = plot_background_colors(typeplotback)
     samples = np.asarray(listpara)
     if samples.size == 0:
         raise ValueError("listpara must contain posterior samples")
@@ -745,7 +842,7 @@ def plot_grid(
         parameter_count,
         parameter_count,
         figsize=(1.7 * parameter_count, 1.7 * parameter_count),
-        facecolor="white",
+        facecolor=background,
         squeeze=False,
     )
     for row in range(parameter_count):
@@ -760,7 +857,7 @@ def plot_grid(
                     samples[:, column],
                     bins=30,
                     histtype="step",
-                    color="black",
+                    color=foreground,
                     linewidth=1.2,
                 )
                 if truth is not None and column < truth.size and np.isfinite(truth[column]):
@@ -779,7 +876,7 @@ def plot_grid(
                     samples[:, row],
                     s=1.0,
                     alpha=0.12,
-                    color="black",
+                    color=foreground,
                     edgecolors="none",
                     rasterized=True,
                 )
@@ -808,7 +905,7 @@ def plot_grid(
                             linewidths=1.0,
                             zorder=3,
                         )
-            axis.tick_params(labelsize=8, colors="black")
+            axis.tick_params(labelsize=8, colors=foreground)
             axis.spines[["top", "right"]].set_visible(False)
             if row == parameter_count - 1:
                 axis.set_xlabel(labels[column], fontsize=8)
@@ -827,11 +924,13 @@ def plot_grid(
         hspace=0.08,
     )
     output_path = _output_path(path, name, typefileplot)
+    apply_plot_theme(figure, typeplotback)
     print(f"Writing to {output_path}...")
     figure.savefig(
         output_path,
         dpi=300 if typefileplot == "png" else None,
         bbox_inches="tight",
+        facecolor=background,
     )
     plt.close(figure)
     return output_path
@@ -883,9 +982,10 @@ def _save_view(figure, output_path, typefileplot):
         raise ValueError("typefileplot must be 'png' or 'pdf'")
     output_path = Path(output_path).with_suffix(f".{typefileplot}")
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    apply_plot_theme(figure)
     print(f"Writing to {output_path}...")
     figure.savefig(output_path, dpi=300 if typefileplot == "png" else None,
-                   bbox_inches="tight", facecolor="white")
+                   bbox_inches="tight", facecolor=figure.get_facecolor())
     plt.close(figure)
     return output_path
 
@@ -1012,7 +1112,7 @@ def plot_proposal_ledger(state, output_path, typefileplot="png", number_windows=
     if temperature.size == sweep.size and np.ptp(temperature) > 0:
         inverse = np.bincount(window, weights=temperature, minlength=number_windows) / \
             np.maximum(np.bincount(window, minlength=number_windows), 1)
-        axis.plot(centers, np.maximum(inverse, floor), color="black", ls="--", lw=1.2,
+        axis.plot(centers, np.maximum(inverse, floor), color=plot_background_colors()[1], ls="--", lw=1.2,
                   label=r"Likelihood inverse temperature $\beta$")
     axis.set_yscale("log")
     axis.set(xlabel="Sweep", ylabel=f"Accepted fraction (floor {floor:g})", ylim=(0.7 * floor, 1.5),
@@ -1039,7 +1139,7 @@ def plot_proposal_ledger(state, output_path, typefileplot="png", number_windows=
                   label="Accepted fraction" if row == 0 else None)
         filtered = 1.0 - evaluated[chosen].mean()
         if filtered > 0:
-            axis.plot(filtered, row - 0.2, marker="D", markersize=5, color="black", linestyle="none",
+            axis.plot(filtered, row - 0.2, marker="D", markersize=5, color=plot_background_colors()[1], linestyle="none",
                       label=None if "filtered" in labeled else "Rejected before likelihood")
             labeled.add("filtered")
     axis.set_yticks(positions, [MOVE_LABELS.get(str(names[index]), str(names[index])) for index in present])
@@ -1093,7 +1193,7 @@ def plot_acceptance_decomposition(state, output_path, typefileplot="png"):
         for body, index in zip(violins["bodies"], present):
             body.set_facecolor(MOVE_COLORS.get(str(names[index]), "black"))
             body.set_alpha(0.65)
-        axis.axvline(0.0, color="black", lw=0.8, ls="--")
+        axis.axvline(0.0, color=plot_background_colors()[1], lw=0.8, ls="--")
         shown = decades[decades <= limit]
         if shown.size > 4:
             shown = shown[::2]
@@ -1228,7 +1328,7 @@ def plot_catalog_trace(state, output_path, position="elin", amplitude="flux", po
     side.grid(False)
 
     strip = figure.add_subplot(grid[1, 0], sharex=axis)
-    strip.step(np.arange(sizes.size), sizes, where="mid", color="black", lw=1.0)
+    strip.step(np.arange(sizes.size), sizes, where="mid", color=plot_background_colors()[1], lw=1.0)
     strip.set(xlabel="Retained sample index", ylabel="Elements",
               xlim=(-0.5, sizes.size - 0.5))
     strip.yaxis.get_major_locator().set_params(integer=True)
@@ -1282,12 +1382,12 @@ def plot_posterior_predictive(state, output_path, axis_values=None, axis_label="
     axes[0].fill_between(axis_values, quantiles[1], quantiles[2], color="#6BAED6", lw=0,
                          label="68% replicated-data band")
     axes[0].plot(axis_values, model_median, color="#08306B", lw=1.2, label="Posterior median model")
-    axes[0].plot(axis_values, data, ".", color="black", markersize=3, label="Data")
+    axes[0].plot(axis_values, data, ".", color=plot_background_colors()[1], markersize=3, label="Data")
     axes[0].set(ylabel=data_label, title="Posterior predictive check")
     axes[0].legend(loc="lower left", ncol=2, **LEGEND_STYLE)
     axes[1].axhspan(-2, 2, color="0.9", label=r"$\pm 2\sigma$")
-    axes[1].plot(axis_values, residual, ".", color="black", markersize=3)
-    axes[1].axhline(0.0, color="black", lw=0.8)
+    axes[1].plot(axis_values, residual, ".", color=plot_background_colors()[1], markersize=3)
+    axes[1].axhline(0.0, color=plot_background_colors()[1], lw=0.8)
     axes[1].set(ylabel=r"Residual [$\sigma$]")
     axes[1].legend(loc="upper right", **LEGEND_STYLE)
     axes[2].axhspan(0.025, 0.975, color="0.9", label="Central 95%")

@@ -173,9 +173,10 @@ def retr_lpdfpropelem(gdat, unit):
 
 def retr_dictpcatrvel(time, rvel, stdvrvel, indxinst, pathbase, strgcnfg, maxmnumbplan=4, boollinetren=False,
                       minmrvsa=0.3, maxmrvsa=300., minmperi=1.2, maxmperi=None, maxmecce=0.8,
-                      minmjitt=0.1, maxmjitt=30., numbjitt=24, **dictpcat):
+                      minmjitt=0.1, maxmjitt=30., numbjitt=24, boolmakepropelem=True, **dictpcat):
     """Write PCAT inputs for one star and return the keyword arguments of ``pcat.sampling.sample``.
 
+    Set ``boolmakepropelem=False`` to skip the matched-filter proposal setup when births should use the prior.
     Parameters: time [BJD - 2450000 day], rvel and stdvrvel [m/s], indxinst integer instrument labels.
     """
     time = np.asarray(time, dtype=float)
@@ -220,6 +221,9 @@ def retr_dictpcatrvel(time, rvel, stdvrvel, indxinst, pathbase, strgcnfg, maxmnu
         pathbase=pathbase, strgcnfg=strgcnfg,
     )
     matrdesi = dictpcatrvel['matrdesirvel']
-    dictpcatrvel.update(retr_dictpropelem(time, rvel, stdvrvel, matrdesi, timerefr, minmrvsa, maxmrvsa, minmperi, maxmperi))
+    if boolmakepropelem:
+        dictpcatrvel.update(
+            retr_dictpropelem(time, rvel, stdvrvel, matrdesi, timerefr, minmrvsa, maxmrvsa, minmperi, maxmperi)
+        )
     dictpcatrvel.update(dictpcat)
     return dictpcatrvel

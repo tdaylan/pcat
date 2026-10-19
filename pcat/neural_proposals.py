@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import numpy as np
-from scipy.special import logsumexp, ndtr
+from scipy.special import expit, logsumexp, ndtr
 from scipy.stats import truncnorm
 
 
@@ -29,6 +29,23 @@ def _make_network(condition_dimension, element_dimension, hidden_sizes, number_c
     output_dimension = number_components * (1 + 2 * element_dimension)
     layers.append(nn.Linear(input_dimension, output_dimension))
     return nn.Sequential(*layers)
+
+class _StateProposalCallbacks:
+    def __init__(self, proposal, retr_condition):
+        self.proposal = proposal
+        self.retr_condition = retr_condition
+
+    def draw(self, gdat, context):
+        return self.proposal.sample(self.retr_condition(gdat, context))
+
+    def log_prob(self, gdat, unit_element, context):
+        return self.proposal.log_prob(self.retr_condition(gdat, context), unit_element)
+
+    def callbacks(self):
+        return {
+            "retr_drawpropelem_state": self.draw,
+            "retr_lpdfpropelem_state": self.log_prob,
+        }
 
 
 class NeuralElementProposal:
@@ -204,18 +221,40 @@ class NeuralElementProposal:
 
     def log_prob(self, conditions, unit_element):
         """Return the normalized log density with respect to unit-cube volume."""
-        unit_element = np.asarray(unit_element, dtype=np.float32)
-        if unit_element.shape != (self.element_dimension,):
-            raise ValueError(f"unit_element must have shape ({self.element_dimension},).")
-        if not np.isfinite(unit_element).all():
-            return -np.inf
-        if np.any((unit_element < 0.) | (unit_element > 1.)):
-            return -np.inf
+        return float(self.log_prob_batch(conditions, unit_element)[0])
+
+    def log_prob_batch(self, conditions, unit_elements):
+        """Return log densities for one or more unit-cube element vectors."""
+        conditions = np.asarray(conditions, dtype=np.float32)
+        unit_elements = np.asarray(unit_elements, dtype=np.float32)
+        if unit_elements.ndim == 1:
+            unit_elements = unit_elements[None, :]
+        if unit_elements.ndim != 2 or unit_elements.shape[1] != self.element_dimension:
+            raise ValueError(
+                f"unit_elements must have shape (n, {self.element_dimension})."
+            )
+        if conditions.ndim == 1:
+            conditions = np.broadcast_to(conditions, (unit_elements.shape[0], conditions.size))
+        if conditions.shape != (unit_elements.shape[0], self.condition_dimension):
+            raise ValueError(
+                f"conditions must have shape ({self.condition_dimension},) or "
+                f"({unit_elements.shape[0]}, {self.condition_dimension})."
+            )
+        if not np.isfinite(conditions).all():
+            raise ValueError("proposal features must contain only finite values.")
+        valid = np.isfinite(unit_elements).all(axis=1)
+        valid &= np.all((unit_elements >= 0.) & (unit_elements <= 1.), axis=1)
+        result = np.full(unit_elements.shape[0], -np.inf, dtype=float)
+        if not valid.any():
+            return result
+
         torch, _ = _require_torch()
         with torch.no_grad():
-            condition_tensor = self._condition_tensor(conditions)
-            element_tensor = torch.as_tensor(unit_element[None, :])
-            return float(self._log_prob_tensor(condition_tensor, element_tensor)[0])
+            normalized_conditions = (conditions[valid] - self.condition_mean) / self.condition_scale
+            condition_tensor = torch.as_tensor(normalized_conditions)
+            element_tensor = torch.as_tensor(unit_elements[valid])
+            result[valid] = self._log_prob_tensor(condition_tensor, element_tensor).numpy()
+        return result
 
     def sample(self, conditions):
         """Draw one element in unit-prior coordinates."""
@@ -227,10 +266,10 @@ class NeuralElementProposal:
             output = self.network(self._condition_tensor(conditions))[0].numpy()
         split = self.number_components
         weights = np.exp(output[:split] - logsumexp(output[:split]))
-        means = 1. / (1. + np.exp(-output[split:split + split * self.element_dimension]))
+        means = expit(output[split:split + split * self.element_dimension])
         means = means.reshape(self.number_components, self.element_dimension)
         scales_raw = output[split + split * self.element_dimension:]
-        scales = self.minimum_scale + (0.5 - self.minimum_scale) / (1. + np.exp(-scales_raw))
+        scales = self.minimum_scale + (0.5 - self.minimum_scale) * expit(scales_raw)
         scales = scales.reshape(self.number_components, self.element_dimension)
         component = np.random.choice(self.number_components, p=weights)
         lower = -means[component] / scales[component]
@@ -261,6 +300,17 @@ class NeuralElementProposal:
             "retr_lpdfpropelem": self.log_prob_from_state,
         }
 
+    def state_callbacks(self, retr_condition):
+        """Return callbacks conditioned on data and an immutable catalog context.
+
+        ``retr_condition(gdat, context)`` must return the same feature vector
+        representation used to fit this proposal. Training conditions must be
+        constructed from simulated catalog states in the same way.
+        """
+        if not callable(retr_condition):
+            raise TypeError("retr_condition must be callable.")
+        return _StateProposalCallbacks(self, retr_condition).callbacks()
+
     def save(self, path):
         """Save model weights and density configuration for later sampling."""
         torch, _ = _require_torch()
@@ -269,8 +319,8 @@ class NeuralElementProposal:
         print(f"Writing to {path}...")
         torch.save(
             {
-                "condition_mean": self.condition_mean,
-                "condition_scale": self.condition_scale,
+                "condition_mean": self.condition_mean.tolist(),
+                "condition_scale": self.condition_scale.tolist(),
                 "condition_dimension": self.condition_dimension,
                 "element_dimension": self.element_dimension,
                 "number_components": self.number_components,

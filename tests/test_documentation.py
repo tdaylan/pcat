@@ -1,9 +1,14 @@
+import ast
 import json
 import inspect
 import re
 import tomllib
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import Mock
 
+import numpy as np
+import pytest
 from PIL import Image
 
 from pcat import plotting, sampling
@@ -18,6 +23,7 @@ DOCS_ROOT = REPOSITORY_ROOT / "docs"
 def test_pyproject_build_metadata_preserves_declared_requirements(tmp_path, monkeypatch):
     from email.parser import Parser
     import shutil
+    from zipfile import ZipFile
     from packaging.requirements import Requirement
     from setuptools import build_meta
 
@@ -38,17 +44,39 @@ def test_pyproject_build_metadata_preserves_declared_requirements(tmp_path, monk
     generated = Parser().parsestr(path.read_text())
     path = tmp_path / "pyproject.toml"
     print(f"Reading from {path}...")
-    project = tomllib.loads(path.read_text())["project"]
+    configuration = tomllib.loads(path.read_text())
+    assert "setuptools>=77" in configuration["build-system"]["requires"]
+    project = configuration["project"]
     assert generated["Name"] == project["name"]
     assert generated["Version"] == project["version"]
     assert generated["Summary"] == project["description"]
     assert generated["Requires-Python"] == project["requires-python"]
+    assert generated["License-Expression"] == project["license"] == "MIT"
+    assert generated.get_all("License-File") == project["license-files"] == ["LICENSE"]
+    assert generated["License"] is None
     expected = {str(Requirement(value)) for value in project["dependencies"]}
     for extra, requirements in project["optional-dependencies"].items():
         expected.update(str(Requirement(f'{value}; extra == "{extra}"')) for value in requirements)
     actual = {str(Requirement(value)) for value in generated.get_all("Requires-Dist", [])}
     assert actual == expected
     assert set(generated.get_all("Provides-Extra", [])) == set(project["optional-dependencies"])
+    wheel_path = tmp_path / 'wheel'
+    wheel_path.mkdir()
+    print(f'Writing to {wheel_path}...')
+    wheel_name = build_meta.build_wheel(str(wheel_path))
+    print(f'Reading from {wheel_path / wheel_name}...')
+    with ZipFile(wheel_path / wheel_name) as archive:
+        paths = archive.namelist()
+        metadata_name = next(name for name in paths if name.endswith('.dist-info/METADATA'))
+        license_name = next(name for name in paths if name.endswith('.dist-info/licenses/LICENSE'))
+        wheel_metadata = Parser().parsestr(archive.read(metadata_name).decode('utf-8'))
+        print(f'Reading from {REPOSITORY_ROOT / "LICENSE"}...')
+        assert archive.read(license_name) == (REPOSITORY_ROOT / 'LICENSE').read_bytes()
+        assert wheel_metadata['License-Expression'] == 'MIT'
+        assert wheel_metadata.get_all('License-File') == ['LICENSE']
+        assert {str(Requirement(value)) for value in wheel_metadata.get_all('Requires-Dist', [])} == expected
+        for module in (REPOSITORY_ROOT / 'pcat').glob('*.py'):
+            assert f'pcat/{module.name}' in paths
 
 
 def test_readme_local_images_exist():
@@ -387,6 +415,16 @@ def test_documented_api_signatures_match_public_entry_points():
     assert "pcat.sampling.init(dictglob, **options)" in api
     assert "pcat.sampling.sample_parallel(dictpcatinptvari, listlablcnfg" in api
     assert "scalpara=None, truepara=None, join=False" in api
+    assert list(inspect.signature(plotting.plot_lens_parameter_recovery).parameters) == [
+        "output_path", "draws", "true_parameters", "typefileplot", "labels",
+    ]
+    assert 'pcat.plotting.plot_lens_parameter_recovery(output_path, draws, true_parameters, typefileplot="png", labels=(' in api
+    assert "sample-by-parameter array with one injected value and one label per column." in api
+    parameters = inspect.signature(plotting.plot_detection_diagnostic).parameters
+    assert list(parameters) == ["records", "output_path", "examples", "detection_threshold", "example_prefix"]
+    assert parameters["detection_threshold"].default == 0.5
+    assert parameters["example_prefix"].default is None
+    assert "pcat.plotting.plot_detection_diagnostic(records, output_path, examples=None, detection_threshold=0.5, example_prefix=None)" in api
 
 
 def test_documented_output_layout_matches_runtime(tmp_path):
@@ -560,6 +598,148 @@ def test_student_t_proposal_and_target_specific_efficiency_are_documented():
     assert "their sum must not exceed one" in sampling
     assert "student_t" in example
     assert "ESS per second" in sampling
+
+
+def test_neural_proposal_extra_and_transdimensional_usage_are_documented():
+    readme = (REPOSITORY_ROOT / "README.md").read_text()
+    sampling = (DOCS_ROOT / "sampling.rst").read_text()
+    project = tomllib.loads((REPOSITORY_ROOT / "pyproject.toml").read_text())["project"]
+    benchmark = REPOSITORY_ROOT / "examples/neural_proposal_efficiency/neural_proposal_efficiency.py"
+
+    assert any(requirement.startswith("torch>=") for requirement in project["optional-dependencies"]["neural"])
+    assert benchmark.is_file()
+    example_readme = (REPOSITORY_ROOT / "examples/README.md").read_text()
+    assert "data-informed" in example_readme
+    assert "--run-id" in example_readme and "before training" in example_readme
+    for source in (readme, sampling):
+        assert "NeuralElementProposal.fit" in source
+        assert "uniform_fraction" in source
+        assert "proposal.callbacks()" in source
+        assert "neural_proposal_features" in source
+        assert "transdimensional" in source
+    assert "ess_per_call" in benchmark.read_text()
+    assert "likelihood_ess_per_call" in benchmark.read_text()
+    assert "count_posterior_total_variation" in benchmark.read_text()
+    assert "_count_rhat" in benchmark.read_text()
+    assert "_efficiency_gain_supported" in benchmark.read_text()
+    assert 'boolmakepropelem=method != "prior"' in benchmark.read_text()
+    assert "probjump=0.0" in benchmark.read_text()
+
+
+@pytest.fixture
+def neural_benchmark_control(tmp_path):
+    path = REPOSITORY_ROOT / 'examples/neural_proposal_efficiency/neural_proposal_efficiency.py'
+    print(f'Reading from {path}...')
+    function = next(node for node in ast.parse(path.read_text()).body if isinstance(node, ast.FunctionDef) and node.name == 'run_benchmark')
+    training = Mock(side_effect=RuntimeError('synthetic stop at training'))
+    namespace = {
+        'Path': Path, 'np': np, 'time': SimpleNamespace(perf_counter=Mock(return_value=0.0)),
+        'RUNS_PATH': tmp_path / 'data', 'VISUALS_PATH': tmp_path / 'visuals',
+        'retr_pathrun': retr_pathrun, '_training_data': training,
+    }
+    exec(compile(ast.Module(body=[function], type_ignores=[]), str(path), 'exec'), namespace)
+    arguments = SimpleNamespace(run_id='synthetic', seed=53, validation_scenes=2, chains_per_scene=2, training_scenes=2)
+    return namespace, arguments, training
+
+
+@pytest.fixture
+def neural_count_ess():
+    path = REPOSITORY_ROOT / 'examples/neural_proposal_efficiency/neural_proposal_efficiency.py'
+    print(f'Reading from {path}...')
+    functions = [node for node in ast.parse(path.read_text()).body if isinstance(node, ast.FunctionDef) and node.name in {'_count_trace', '_count_ess'}]
+    namespace = {'np': np}
+    exec(compile(ast.Module(body=functions, type_ignores=[]), str(path), 'exec'), namespace)
+    return namespace['_count_ess']
+
+
+@pytest.mark.parametrize('count', [0, 1, 2, 3, 4, 64])
+def test_neural_count_ess_keeps_zero_policy_for_every_constant_trace(neural_count_ess, count):
+    with np.errstate(all='raise'):
+        assert neural_count_ess(np.full(count, 2)) == 0.0
+
+
+@pytest.mark.parametrize('values', [
+    [np.nan], [0, 1, np.nan, 2], [0, np.inf], [0, -np.inf],
+    np.ma.array([0, 1, 2, 1], mask=[False, True, False, False]),
+    np.ma.masked_all(4), np.ma.masked,
+])
+def test_neural_count_ess_rejects_unavailable_samples(neural_count_ess, values):
+    with np.errstate(all='raise'), pytest.raises(ValueError, match='Count ESS requires'):
+        neural_count_ess(values)
+
+
+@pytest.mark.parametrize('count', [2, 3, 8, 65])
+def test_neural_count_ess_preserves_existing_varying_trace_calculation(neural_count_ess, count):
+    values = np.random.default_rng(53).integers(0, 4, count).astype(float)
+    if count < 4:
+        expected = float(count)
+    else:
+        centered = values - np.mean(values)
+        fft_size = 1 << (2 * count - 1).bit_length()
+        spectrum = np.fft.rfft(centered, n=fft_size)
+        covariance = np.fft.irfft(spectrum * np.conjugate(spectrum), n=fft_size)[:count]
+        covariance /= np.arange(count, 0, -1)
+        correlation = covariance / covariance[0]
+        paired_sum = 0.0
+        for lag in range(1, count - 1, 2):
+            pair = correlation[lag] + correlation[lag + 1]
+            if pair <= 0.0:
+                break
+            paired_sum += pair
+        expected = float(min(count, count / max(1.0, 1.0 + 2.0 * paired_sum)))
+
+    with np.errstate(all='raise'):
+        actual = neural_count_ess(values)
+        unmasked = neural_count_ess(np.ma.asarray(values))
+
+    assert actual == unmasked == expected
+
+
+@pytest.mark.parametrize('artifact_kind', ['checkpoint', 'results', 'figure', 'prior', 'data-informed', 'neural', 'later_chain'])
+def test_neural_benchmark_preserves_existing_artifacts_before_training(neural_benchmark_control, tmp_path, artifact_kind):
+    namespace, arguments, training = neural_benchmark_control
+    artifacts = {
+        'checkpoint': namespace['RUNS_PATH'] / 'synthetic_proposal.pt',
+        'results': namespace['RUNS_PATH'] / 'synthetic_results.json',
+        'figure': namespace['VISUALS_PATH'] / 'synthetic_efficiency.png',
+    }
+    if artifact_kind in artifacts:
+        artifact = artifacts[artifact_kind]
+        preserved = artifact
+        artifact.parent.mkdir(parents=True)
+    else:
+        method = 'neural' if artifact_kind == 'later_chain' else artifact_kind
+        validation_seed = 64 if artifact_kind == 'later_chain' else 63
+        chain_index = 1 if artifact_kind == 'later_chain' else 0
+        run_id = f'synthetic_{method}_{validation_seed}_chain{chain_index}'
+        artifact = Path(retr_pathrun(str(namespace['RUNS_PATH']), run_id)) / 'data' / 'outp' / run_id
+        artifact.mkdir(parents=True)
+        preserved = artifact / 'original.h5'
+    original = b'original synthetic artifact'
+    print(f'Writing to {preserved}...')
+    preserved.write_bytes(original)
+    original_paths = set(tmp_path.rglob('*'))
+
+    with pytest.raises(FileExistsError, match='Choose a new --run-id') as caught:
+        namespace['run_benchmark'](arguments)
+
+    assert str(artifact) in str(caught.value)
+    training.assert_not_called()
+    namespace['time'].perf_counter.assert_not_called()
+    print(f'Reading from {preserved}...')
+    assert preserved.read_bytes() == original
+    assert set(tmp_path.rglob('*')) == original_paths
+
+
+def test_neural_benchmark_fresh_run_reaches_training_without_creating_outputs(neural_benchmark_control, tmp_path):
+    namespace, arguments, training = neural_benchmark_control
+
+    with pytest.raises(RuntimeError, match='synthetic stop at training'):
+        namespace['run_benchmark'](arguments)
+
+    training.assert_called_once()
+    assert training.call_args.args[3:] == (arguments.training_scenes, arguments.seed + 1000)
+    assert list(tmp_path.iterdir()) == []
 
 
 def test_burn_in_benchmark_is_linked_and_compares_multiple_targets():

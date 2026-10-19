@@ -11,6 +11,8 @@ from pathlib import Path
 
 import matplotlib as mpl
 
+from tdpy.plotting import configure_plot_style
+
 from . import main as pcat_main
 
 
@@ -89,22 +91,11 @@ def write_time_series_fits(input_directory: Path, bin_edges, observed_counts, ba
 
 def configure_example_style(typeplotback: str = "white") -> str:
     """Apply the shared light or dark theme and return its foreground color."""
-    colrfore = "white" if typeplotback == "dark" else "black"
-    colrback = "black" if typeplotback == "dark" else "white"
+    colrfore = configure_plot_style(typeplotback)
     mpl.rcParams.update({
         "font.size": 10,
         "text.usetex": False,
-        "axes.grid": False,
-        "figure.facecolor": colrback,
-        "axes.facecolor": colrback,
-        "savefig.facecolor": colrback,
-        "axes.edgecolor": colrfore,
-        "axes.labelcolor": colrfore,
-        "xtick.color": colrfore,
-        "ytick.color": colrfore,
-        "text.color": colrfore,
         "legend.fancybox": True,
-        "legend.framealpha": 1.0,
     })
     return colrfore
 

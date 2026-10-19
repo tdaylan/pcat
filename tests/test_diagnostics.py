@@ -50,7 +50,95 @@ def _capture_figures(monkeypatch):
     return figures
 
 
-def test_posterior_convergence_plots_fixed_and_transdimensional_chains(tmp_path):
+@pytest.mark.parametrize('kind', ['plot_plot', 'plot_trac', 'plot_hist', 'plot_atcr'])
+@pytest.mark.parametrize('typeplotback', ['white', 'dark'])
+@pytest.mark.parametrize('inherit', [False, True])
+def test_compatibility_plot_helpers_honor_background(tmp_path, monkeypatch, kind, typeplotback, inherit):
+    from matplotlib.colors import to_rgba
+    from tdpy.plotting import plot_background_colors, plot_style
+
+    figures = _capture_figures(monkeypatch)
+    options = {'typefileplot': 'png'}
+    if not inherit:
+        options['typeplotback'] = typeplotback
+    outer_theme = typeplotback if inherit else ('dark' if typeplotback == 'white' else 'white')
+    path = str(tmp_path / kind)
+    with plot_style(outer_theme):
+        original_settings = dict(pcat_main.plt.rcParams)
+        if kind == 'plot_plot':
+            _PCATMCMCCompat.plot_plot(path, [0, 1], np.array([1, 0]), **options)
+        elif kind == 'plot_trac':
+            _PCATMCMCCompat.plot_trac(path, [0, 1], 'value', **options)
+        elif kind == 'plot_hist':
+            _PCATMCMCCompat.plot_hist(path, [0, 1], 'value', **options)
+        else:
+            _PCATMCMCCompat.plot_atcr(path, [1, 0.5], 1.5, **options)
+            path += 'atcr'
+        assert dict(pcat_main.plt.rcParams) == original_settings
+    background, foreground = plot_background_colors(typeplotback)
+    figure = figures[0]
+    axis = figure.axes[0]
+    assert figure.get_facecolor() == to_rgba(background)
+    assert axis.get_facecolor() == to_rgba(background)
+    assert axis.xaxis.label.get_color() == foreground
+    if kind == 'plot_hist':
+        assert axis.patches[0].get_edgecolor() == to_rgba(foreground)
+    elif kind != 'plot_plot':
+        assert axis.lines[0].get_color() == foreground
+    with Image.open(path + '.png') as image:
+        expected = tuple(int(channel * 255) for channel in to_rgba(background)[:3])
+        assert image.convert('RGB').getpixel((0, 0)) == expected
+
+
+@pytest.mark.parametrize('typeplotback', ['white', 'dark'])
+@pytest.mark.parametrize('inherit', [False, True])
+def test_sample_scopes_plot_theme_and_forwards_selection(tmp_path, monkeypatch, typeplotback, inherit):
+    from matplotlib.colors import to_rgba
+    from tdpy.plotting import plot_background_colors, plot_style
+
+    sentinel = SimpleNamespace(boolmakeplot=False)
+    background, foreground = plot_background_colors(typeplotback)
+    path = tmp_path / 'sampler.png'
+
+    def initialize(configuration):
+        assert configuration['typeplotback'] == typeplotback
+        figure, axis = pcat_main.plt.subplots()
+        assert axis.xaxis.label.get_color() == foreground
+        figure.savefig(path)
+        pcat_main.plt.close(figure)
+        return sentinel
+
+    monkeypatch.setattr(pcat_main, 'init', initialize)
+    options = {} if inherit else {'typeplotback': typeplotback}
+    outer_theme = typeplotback if inherit else ('dark' if typeplotback == 'white' else 'white')
+    with plot_style(outer_theme):
+        original = dict(pcat_main.plt.rcParams)
+        assert pcat_main.sample(**options) is sentinel
+        assert dict(pcat_main.plt.rcParams) == original
+        with Image.open(path) as image:
+            expected = tuple(int(channel * 255) for channel in to_rgba(background)[:3])
+            assert image.convert('RGB').getpixel((0, 0)) == expected
+
+
+def test_sample_restores_theme_after_initialization_failure(monkeypatch):
+    from tdpy.plotting import plot_background_colors, plot_style
+
+    def fail(configuration):
+        raise RuntimeError('Original initialization failure')
+
+    monkeypatch.setattr(pcat_main, 'init', fail)
+    with plot_style('white'):
+        original = dict(pcat_main.plt.rcParams)
+        with pytest.raises(RuntimeError, match='Original initialization failure'):
+            pcat_main.sample(typeplotback='dark')
+        assert dict(pcat_main.plt.rcParams) == original
+        assert plot_background_colors() == ('white', 'black')
+
+
+@pytest.mark.parametrize('typeplotback', ['white', 'dark'])
+def test_posterior_convergence_plots_fixed_and_transdimensional_chains(tmp_path, typeplotback):
+    from tdpy.plotting import plot_style
+
     rng = np.random.default_rng(31)
     state = SimpleNamespace(
         listpostparagenrscalbase=rng.normal(size=(240, 2)),
@@ -59,7 +147,8 @@ def test_posterior_convergence_plots_fixed_and_transdimensional_chains(tmp_path)
         numbsamp=120,
     )
 
-    paths = plot_posterior_convergence(state, tmp_path, typefileplot="png")
+    with plot_style(typeplotback):
+        paths = plot_posterior_convergence(state, tmp_path, typefileplot="png")
 
     assert set(paths) == {
         "fixed_parameter_trace", "fixed_parameter_autocorrelation",
@@ -70,6 +159,29 @@ def test_posterior_convergence_plots_fixed_and_transdimensional_chains(tmp_path)
         print(f"Reading from {path}...")
         with Image.open(path) as image:
             assert image.width > 200 and image.height > 200
+            expected = (0, 0, 0) if typeplotback == 'dark' else (255, 255, 255)
+            assert image.convert('RGB').getpixel((0, 0)) == expected
+
+
+@pytest.mark.parametrize('typeplotback', ['white', 'dark'])
+def test_sampler_view_export_overrides_hardcoded_figure_background(tmp_path, typeplotback):
+    from matplotlib.colors import to_rgba
+    from pcat.plotting import _save_view
+    from tdpy.plotting import plot_background_colors, plot_style
+
+    with plot_style(typeplotback):
+        figure, axis = pcat_main.plt.subplots(facecolor='white')
+        line, = axis.plot([0, 1], [1, 0], color='red', label='Data')
+        legend = axis.legend(facecolor='white')
+        path = _save_view(figure, tmp_path / 'operation', 'png')
+        background, foreground = plot_background_colors()
+        assert axis.get_facecolor() == to_rgba(background)
+        assert legend.get_frame().get_facecolor() == to_rgba(background)
+        assert legend.get_texts()[0].get_color() == foreground
+        assert line.get_color() == 'red'
+        with Image.open(path) as image:
+            expected = tuple(int(channel * 255) for channel in to_rgba(background)[:3])
+            assert image.convert('RGB').getpixel((0, 0)) == expected
 
 
 def test_catalog_transitions_do_not_cross_independent_chains():
@@ -154,6 +266,136 @@ def test_gmrb_rejects_separated_constant_chains():
     assert np.isinf(gelman_rubin(chains))
 
 
+@pytest.mark.parametrize('kind', ['masked', 'nan', 'positive_infinity', 'negative_infinity', 'complex'])
+@pytest.mark.parametrize('legacy', [False, True])
+def test_gelman_rubin_marks_invalid_traces_undefined_without_warnings(kind, legacy):
+    import warnings
+
+    chains = np.column_stack((np.arange(8.0), np.arange(8.0)))
+    if kind == 'masked':
+        chains = np.ma.array(chains, mask=False)
+        chains.data[0, :] = 1e6
+        chains.mask[0, :] = True
+    elif kind == 'complex':
+        chains = chains.astype(complex)
+        chains[0, 0] += 0.5j
+    else:
+        chains[0, 0] = {'nan': np.nan, 'positive_infinity': np.inf, 'negative_infinity': -np.inf}[kind]
+    original = chains.copy()
+    calculate = _PCATMCMCCompat.gmrb_test if legacy else gelman_rubin
+    with warnings.catch_warnings(), np.errstate(all='raise'):
+        warnings.simplefilter('error')
+        assert np.isnan(calculate(chains))
+    np.testing.assert_array_equal(np.ma.getdata(chains), np.ma.getdata(original))
+    np.testing.assert_array_equal(np.ma.getmaskarray(chains), np.ma.getmaskarray(original))
+
+
+@pytest.mark.parametrize('kind', ['varied', 'identical_constant', 'separated_constant'])
+@pytest.mark.parametrize('unmasked_container', [False, True])
+@pytest.mark.parametrize('legacy', [False, True])
+def test_gelman_rubin_preserves_valid_trace_behavior(kind, unmasked_container, legacy):
+    if kind == 'varied':
+        chains = np.random.default_rng(614).normal(size=(12, 2))
+        within = np.mean(np.var(chains, axis=0, ddof=1))
+        between = 12 * np.var(np.mean(chains, axis=0), ddof=1)
+        expected = float(np.sqrt(((11 / 12) * within + between / 12) / within))
+    elif kind == 'identical_constant':
+        chains = np.ones((12, 2))
+        expected = np.nan
+    else:
+        chains = np.column_stack((np.zeros(12), np.ones(12)))
+        expected = np.inf
+    if unmasked_container:
+        chains = np.ma.array(chains, mask=False)
+    original = chains.copy()
+    calculate = _PCATMCMCCompat.gmrb_test if legacy else gelman_rubin
+    actual = calculate(chains)
+    if np.isnan(expected):
+        assert np.isnan(actual)
+    else:
+        assert actual == expected
+    np.testing.assert_array_equal(chains, original)
+
+
+@pytest.mark.parametrize('exponent', [-1000, -900, 900, 1020])
+@pytest.mark.parametrize('unmasked_container', [False, True])
+@pytest.mark.parametrize('legacy', [False, True])
+def test_gelman_rubin_preserves_estimate_at_extreme_scales(exponent, unmasked_container, legacy):
+    import warnings
+
+    chains = np.random.default_rng(616).normal(size=(16, 2))
+    expected = gelman_rubin(chains)
+    values = np.ldexp(chains, exponent)
+    if unmasked_container:
+        values = np.ma.array(values, mask=False)
+    original = values.copy()
+    calculate = _PCATMCMCCompat.gmrb_test if legacy else gelman_rubin
+    with warnings.catch_warnings(), np.errstate(all='raise'):
+        warnings.simplefilter('error')
+        assert calculate(values) == expected
+    np.testing.assert_array_equal(values, original)
+
+
+@pytest.mark.parametrize('value', [1e-200, 1e200, np.finfo(float).max])
+@pytest.mark.parametrize('separated', [False, True])
+@pytest.mark.parametrize('legacy', [False, True])
+def test_gelman_rubin_extreme_constants_keep_existing_conventions(value, separated, legacy):
+    import warnings
+
+    values = np.column_stack((np.full(12, value), np.full(12, -value if separated else value)))
+    calculate = _PCATMCMCCompat.gmrb_test if legacy else gelman_rubin
+    with warnings.catch_warnings(), np.errstate(all='raise'):
+        warnings.simplefilter('error')
+        actual = calculate(values)
+    assert np.isinf(actual) if separated else np.isnan(actual)
+
+
+@pytest.mark.parametrize('statistics', [np.array([0.9, 1.1]), np.array([0.8, 0.9]),
+                                      np.ones(3), np.array([1.1, 1.2]),
+                                      np.array([[0.9, 1.1], [0.95, 1.2]])])
+@pytest.mark.parametrize('typefileplot', ['png', 'pdf'])
+def test_gelman_rubin_histogram_counts_every_finite_statistic(tmp_path, monkeypatch, statistics, typefileplot):
+    from matplotlib import pyplot as plt
+    from pcat import plotting
+
+    original = statistics.copy()
+    captured = []
+    save = plotting.save_figure
+    before = set(plt.get_fignums())
+
+    def capture(figure, path, *arguments, **kwargs):
+        axis = figure.axes[0]
+        assert sum(bar.get_height() for bar in axis.patches) == statistics.size
+        assert axis.get_xlabel() == 'PSRF'
+        assert axis.get_ylabel() == '$N_p$'
+        captured.append(figure)
+        return save(figure, path, *arguments, **kwargs)
+
+    monkeypatch.setattr(plotting, 'save_figure', capture)
+    plotting.plot_gelman_rubin(str(tmp_path / 'complete_rhat_'), statistics, typefileplot)
+    assert len(captured) == 1
+    np.testing.assert_array_equal(statistics, original)
+    assert set(plt.get_fignums()) == before
+
+
+@pytest.mark.parametrize('statistics', [np.array([]), np.array([np.nan]), np.array([np.inf]),
+                                      np.array([-np.inf]), np.ma.array([0.9, 1.1], mask=[True, False]),
+                                      np.array([1.0 + 0.0j]), np.array(['1.0'])])
+def test_gelman_rubin_histogram_rejects_undefined_inputs_before_rendering(tmp_path, monkeypatch, statistics):
+    import warnings
+    from unittest.mock import Mock
+    from matplotlib import pyplot as plt
+    from pcat.plotting import plot_gelman_rubin
+
+    render = Mock(side_effect=AssertionError('Undefined R-hat input reached figure creation'))
+    monkeypatch.setattr(plt, 'subplots', render)
+    with warnings.catch_warnings(), np.errstate(all='raise'), pytest.raises(ValueError, match='R-hat statistics'):
+        warnings.simplefilter('error')
+        plot_gelman_rubin(str(tmp_path / 'undefined_rhat_'), statistics)
+    render.assert_not_called()
+    assert list(tmp_path.iterdir()) == []
+
+
 def test_tempered_burn_schedule_reaches_unit_temperature_before_sampling():
     schedule = [
         _retr_burn_inverse_temperature(sweep, 4, tempered_fraction=0.75, enabled=True)
@@ -171,6 +413,81 @@ def test_tempered_target_scales_likelihood_but_not_prior():
     assert _retr_tempered_log_target_difference(current, candidate, 1.0) == pytest.approx(3.0)
     assert _retr_tempered_log_target_difference(current, candidate, 0.25) == pytest.approx(0.0)
     assert _retr_tempered_log_target_difference(current, candidate, 0.25, target="prio") == pytest.approx(-1.0)
+
+
+@pytest.mark.parametrize('successes, trials, z_score', [
+    (0.5, 2, 1.0), (1, 2.5, 1.0), (1, 2, np.nan), (1, 2, np.inf),
+    (1, 2, -np.inf), (np.nan, 2, 1.0), (1, np.inf, 1.0),
+    (np.ma.masked, 2, 1.0), (1, 2, np.ma.masked), ([1], 2, 1.0),
+    (1, 2, [1.0]), (1.0 + 0.0j, 2, 1.0), (1, 2, 1.0 + 0.0j),
+    ('1', 2, 1.0),
+])
+def test_binomial_wilson_interval_rejects_invalid_scalar_inputs(successes, trials, z_score):
+    import warnings
+
+    with warnings.catch_warnings(), np.errstate(all='raise'), pytest.raises(ValueError, match='binomial counts|z_score'):
+        warnings.simplefilter('error')
+        binomial_wilson_interval(successes, trials, z_score)
+
+
+@pytest.mark.parametrize('successes, trials', [(0, 40), (20, 40), (40, 40)])
+@pytest.mark.parametrize('convert', [int, float, np.int64, np.uint8, np.asarray,
+                                    lambda value: np.ma.array(value, mask=False)])
+def test_binomial_wilson_interval_preserves_integer_scalar_encodings(successes, trials, convert):
+    import warnings
+
+    expected = binomial_wilson_interval(successes, trials)
+    with warnings.catch_warnings(), np.errstate(all='raise'):
+        warnings.simplefilter('error')
+        actual = binomial_wilson_interval(convert(successes), convert(trials), convert(1))
+    assert actual == expected
+    assert 0.0 <= actual[0] <= actual[1] <= 1.0
+
+
+@pytest.mark.parametrize('trials', [1, 3, 5, 10, 40, 100])
+@pytest.mark.parametrize('z_score', [0.1, 0.5, 1.0, 1.96, 3.0])
+@pytest.mark.parametrize('all_successes', [False, True])
+def test_binomial_wilson_boundary_limits_match_scipy(trials, z_score, all_successes):
+    from scipy.stats import binomtest, norm
+
+    successes = trials if all_successes else 0
+    with np.errstate(all='raise'):
+        lower, upper = binomial_wilson_interval(successes, trials, z_score)
+    reference = binomtest(successes, trials).proportion_ci(
+        confidence_level=2 * norm.cdf(z_score) - 1, method='wilson',
+    )
+    assert 0.0 <= lower <= upper <= 1.0
+    assert upper == 1.0 if all_successes else lower == 0.0
+    np.testing.assert_allclose((lower, upper), (reference.low, reference.high), rtol=5e-14, atol=3e-15)
+
+
+@pytest.mark.parametrize('successes, trials', [(0, 40), (1, 40), (20, 40), (39, 40), (40, 40),
+                                             (2**62, 2**63 - 1), (5e307, 1e308),
+                                             (1, 1e160), (1, 1e308), (0, 1e308),
+                                             (1e308, 1e308), (40, 1e308)])
+@pytest.mark.parametrize('z_score', [0.5, 1.0, 3.0, 1e155, 1e160, np.finfo(float).max])
+def test_binomial_wilson_extreme_values_match_decimal(successes, trials, z_score):
+    from decimal import Decimal, localcontext
+    import warnings
+
+    with localcontext() as context:
+        context.prec = 800
+        count = Decimal(int(successes))
+        total = Decimal(int(trials))
+        score = Decimal.from_float(float(z_score))
+        fraction = count / total
+        squared = score**2
+        denominator = 1 + squared / total
+        center = (fraction + squared / (2 * total)) / denominator
+        half_width = score * (fraction * (1 - fraction) / total + squared / (4 * total**2)).sqrt() / denominator
+        expected = float(center - half_width), float(center + half_width)
+    with warnings.catch_warnings(), np.errstate(all='raise'):
+        warnings.simplefilter('error')
+        actual = binomial_wilson_interval(successes, trials, z_score)
+    assert 0.0 <= actual[0] <= actual[1] <= 1.0
+    if expected[0] > 0.0:
+        assert actual[0] > 0.0
+    np.testing.assert_array_max_ulp(actual, expected, maxulp=8)
 
 
 def test_binomial_wilson_interval_has_finite_boundary_uncertainty():
@@ -257,6 +574,101 @@ def test_autocorrelation_distinguishes_independent_draws_and_random_walk():
     assert direct_time[0] == pytest.approx(time_independent[0])
 
 
+@pytest.mark.parametrize('kind', ['masked', 'nan', 'positive_infinity', 'negative_infinity'])
+@pytest.mark.parametrize('legacy', [False, True])
+def test_autocorrelation_marks_only_invalid_series_undefined(kind, legacy):
+    import warnings
+
+    values = np.column_stack((np.arange(12.0), np.sin(np.arange(12.0))))
+    expected_correlations, expected_time = autocorrelation_time(values[:, 1])
+    if kind == 'masked':
+        values = np.ma.array(values, mask=False)
+        values.data[0, 0] = 1e6
+        values.mask[0, 0] = True
+    else:
+        values[0, 0] = {'nan': np.nan, 'positive_infinity': np.inf, 'negative_infinity': -np.inf}[kind]
+    original = values.copy()
+    calculate = _PCATMCMCCompat.retr_timeatcr if legacy else autocorrelation_time
+    with warnings.catch_warnings(), np.errstate(all='raise'):
+        warnings.simplefilter('error')
+        correlations, times = calculate(values)
+    assert correlations.shape == (2, 6)
+    assert times.shape == (2,)
+    assert np.isnan(correlations[0]).all()
+    assert np.isnan(times[0])
+    np.testing.assert_array_equal(correlations[1], expected_correlations)
+    assert times[1] == expected_time
+    np.testing.assert_array_equal(np.ma.getdata(values), np.ma.getdata(original))
+    np.testing.assert_array_equal(np.ma.getmaskarray(values), np.ma.getmaskarray(original))
+
+
+@pytest.mark.parametrize('shape', [(12,), (12, 2), (12, 2, 2)])
+@pytest.mark.parametrize('unmasked_container', [False, True])
+@pytest.mark.parametrize('legacy', [False, True])
+def test_autocorrelation_preserves_valid_series_shapes_and_constants(shape, unmasked_container, legacy):
+    values = np.random.default_rng(615).normal(size=shape)
+    expected = autocorrelation_time(values)
+    if unmasked_container:
+        values = np.ma.array(values, mask=False)
+    original = values.copy()
+    calculate = _PCATMCMCCompat.retr_timeatcr if legacy else autocorrelation_time
+    actual = calculate(values)
+    np.testing.assert_array_equal(actual[0], expected[0])
+    np.testing.assert_array_equal(actual[1], expected[1])
+    np.testing.assert_array_equal(values, original)
+    correlations, times = calculate(np.ones(shape))
+    assert np.isnan(correlations).all()
+    assert np.isnan(times).all()
+
+
+@pytest.mark.parametrize('legacy', [False, True])
+def test_autocorrelation_complex_series_are_undefined_without_warnings(legacy):
+    import warnings
+
+    values = np.arange(12.0).astype(complex) + 0.5j
+    calculate = _PCATMCMCCompat.retr_timeatcr if legacy else autocorrelation_time
+    with warnings.catch_warnings(), np.errstate(all='raise'):
+        warnings.simplefilter('error')
+        correlations, times = calculate(values)
+    assert np.isnan(correlations).all()
+    assert np.isnan(times).all()
+
+
+@pytest.mark.parametrize('exponent', [-1000, -900, 900, 1020])
+@pytest.mark.parametrize('unmasked_container', [False, True])
+@pytest.mark.parametrize('legacy', [False, True])
+def test_autocorrelation_preserves_estimates_at_extreme_scales(exponent, unmasked_container, legacy):
+    import warnings
+
+    series = np.array([-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 1.0,
+                       -1.0, -2.0, 2.0, 0.0, 1.0, -1.0, 3.0, -3.0])
+    expected = autocorrelation_time(np.column_stack((series, np.sin(np.arange(16.0)))))
+    values = np.column_stack((np.ldexp(series, exponent), np.sin(np.arange(16.0))))
+    if unmasked_container:
+        values = np.ma.array(values, mask=False)
+    original = values.copy()
+    calculate = _PCATMCMCCompat.retr_timeatcr if legacy else autocorrelation_time
+    with warnings.catch_warnings(), np.errstate(all='raise'):
+        warnings.simplefilter('error')
+        actual = calculate(values)
+    np.testing.assert_array_equal(actual[0], expected[0])
+    np.testing.assert_array_equal(actual[1], expected[1])
+    np.testing.assert_array_equal(values, original)
+
+
+@pytest.mark.parametrize('value', [1e-200, 1e200, np.finfo(float).max])
+@pytest.mark.parametrize('legacy', [False, True])
+def test_autocorrelation_extreme_constants_are_undefined_without_warnings(value, legacy):
+    import warnings
+
+    calculate = _PCATMCMCCompat.retr_timeatcr if legacy else autocorrelation_time
+    with warnings.catch_warnings(), np.errstate(all='raise'):
+        warnings.simplefilter('error')
+        correlations, times = calculate(np.full(16, value))
+    assert np.isnan(correlations).all()
+    assert np.isnan(times).all()
+
+
 def test_autocorrelation_plot_selects_finite_nonconstant_series():
     autocorrelation = np.array([[[np.nan, np.nan, np.nan], [1.0, 0.5, 0.1]]])
     correlation_time = np.array([[np.nan, 2.2]])
@@ -265,6 +677,86 @@ def test_autocorrelation_plot_selects_finite_nonconstant_series():
 
     assert series == pytest.approx([1.0, 0.5, 0.1])
     assert time == pytest.approx(2.2)
+
+
+@pytest.mark.parametrize('masked_field', ['correlation', 'time', 'both'])
+@pytest.mark.parametrize('all_invalid', [False, True])
+def test_autocorrelation_plot_excludes_explicitly_masked_candidates(masked_field, all_invalid):
+    import warnings
+
+    correlations = np.ma.array([[1.0, 0.9, 0.8], [1.0, 0.5, 0.1]], mask=False)
+    times = np.ma.array([1000.0, 2.2], mask=False)
+    if masked_field in ('correlation', 'both'):
+        correlations.mask[0, 1] = True
+        if all_invalid:
+            correlations.mask[1, 1] = True
+    if masked_field in ('time', 'both'):
+        times.mask[0] = True
+        if all_invalid:
+            times.mask[1] = True
+    originals = correlations.copy(), times.copy()
+    with warnings.catch_warnings(), np.errstate(all='raise'):
+        warnings.simplefilter('error')
+        series, time = _retr_representative_atcr(correlations, times)
+    if all_invalid:
+        assert series is None and time is None
+    else:
+        assert isinstance(series, np.ndarray) and not np.ma.isMaskedArray(series)
+        np.testing.assert_array_equal(series, [1.0, 0.5, 0.1])
+        assert time == 2.2
+    for actual, original in zip((correlations, times), originals):
+        np.testing.assert_array_equal(actual.data, original.data)
+        np.testing.assert_array_equal(actual.mask, original.mask)
+
+
+@pytest.mark.parametrize('unmasked_container', [False, True])
+def test_autocorrelation_plot_preserves_longest_valid_candidate(unmasked_container):
+    correlations = np.array([[[1.0, 0.5, 0.1], [1.0, 0.8, 0.4]],
+                             [[1.0, 0.9, 0.8], [np.nan, np.nan, np.nan]]])
+    times = np.array([[2.2, 4.0], [8.0, np.nan]])
+    if unmasked_container:
+        correlations = np.ma.array(correlations, mask=False)
+        times = np.ma.array(times, mask=False)
+    series, time = _retr_representative_atcr(correlations, times)
+    assert isinstance(series, np.ndarray) and not np.ma.isMaskedArray(series)
+    np.testing.assert_array_equal(series, [1.0, 0.9, 0.8])
+    assert time == 8.0
+
+
+@pytest.mark.parametrize('curves, times', [
+    (np.ones((2, 3)), np.ones(1)), (np.ones((2, 3)), np.ones(3)),
+    (np.ones((2, 3)), np.array([])), (np.ones((0, 3)), np.ones(1)),
+    (np.ones((2, 0)), np.ones(2)), (np.array(1.0), np.array(1.0)),
+])
+def test_autocorrelation_plot_rejects_unpaired_series_metadata(curves, times):
+    import warnings
+
+    originals = curves.copy(), times.copy()
+    with warnings.catch_warnings(), np.errstate(all='raise'), pytest.raises(ValueError, match='lag axis|one correlation time'):
+        warnings.simplefilter('error')
+        _retr_representative_atcr(curves, times)
+    np.testing.assert_array_equal(curves, originals[0])
+    np.testing.assert_array_equal(times, originals[1])
+
+
+@pytest.mark.parametrize('times', [np.array(2.2), np.array([2.2]), np.array([[2.2]])])
+def test_autocorrelation_plot_preserves_single_series_time_layouts(times):
+    series, time = _retr_representative_atcr(np.array([1.0, 0.5, 0.1]), times)
+    np.testing.assert_array_equal(series, [1.0, 0.5, 0.1])
+    assert time == 2.2
+
+
+def test_autocorrelation_plot_preserves_flattened_time_layout():
+    curves = np.array([[[1.0, 0.5, 0.1], [1.0, 0.8, 0.4]],
+                       [[1.0, 0.9, 0.8], [1.0, 0.1, 0.0]]])
+    series, time = _retr_representative_atcr(curves, np.array([2.2, 4.0, 8.0, 1.0]))
+    np.testing.assert_array_equal(series, [1.0, 0.9, 0.8])
+    assert time == 8.0
+
+
+@pytest.mark.parametrize('shape', [(0,), (0, 3), (2, 0)])
+def test_autocorrelation_plot_skips_two_empty_inputs(shape):
+    assert _retr_representative_atcr(np.empty(shape), np.array([])) == (None, None)
 
 
 def test_chain_convergence_accepts_stationary_independent_draws():
@@ -458,8 +950,9 @@ def test_proposal_animation_uses_recorded_types_and_acceptance(tmp_path):
         assert animation.size[0] > 800
 
 
+@pytest.mark.parametrize('typeplotback', ['white', 'dark'])
 def test_rejected_proposal_candidate_frame_shows_data_and_residual_panels(
-    tmp_path, monkeypatch
+    tmp_path, monkeypatch, typeplotback
 ):
     current = SimpleNamespace(
         boolpropfilt=True,
@@ -480,6 +973,7 @@ def test_rejected_proposal_candidate_frame_shows_data_and_residual_panels(
         cntpdata=np.array([[[1.], [2.], [3.], [4.]]]),
         numbsidecart=2,
         lablproptype=["Within-model proposal", "Birth proposal"],
+        typeplotback=typeplotback,
     )
     worker = SimpleNamespace(this=current, next=candidate, cntrswep=3)
     output_path = tmp_path / "proposal_candidates_swep000000003.png"
@@ -493,6 +987,9 @@ def test_rejected_proposal_candidate_frame_shows_data_and_residual_panels(
     ]
     assert figures[0].axes[0].images
     assert figures[0].axes[1].images
+    assert figures[0]._suptitle.get_color() == '#A51C30'
+    assert all(axis.xaxis.label.get_color() == ('white' if typeplotback == 'dark' else 'black')
+               for axis in figures[0].axes)
     assert any(
         getattr(text, "arrow_patch", None) is not None
         for text in figures[0].axes[0].texts
@@ -503,9 +1000,11 @@ def test_rejected_proposal_candidate_frame_shows_data_and_residual_panels(
     with Image.open(output_path) as image:
         assert image.width > image.height
         assert image.width > 1000
+        assert image.convert('RGB').getpixel((0, 0)) == ((0, 0, 0) if typeplotback == 'dark' else (255, 255, 255))
 
 
-def test_proposal_candidate_frame_shows_one_dimensional_data_and_residuals(tmp_path):
+@pytest.mark.parametrize('typeplotback', ['white', 'dark'])
+def test_proposal_candidate_frame_shows_one_dimensional_data_and_residuals(tmp_path, typeplotback):
     current = SimpleNamespace(
         boolpropfilt=True,
         cntpmodl=np.array([1., 3., 2., 5., 3.]),
@@ -522,6 +1021,7 @@ def test_proposal_candidate_frame_shows_one_dimensional_data_and_residuals(tmp_p
     state = SimpleNamespace(
         cntpdata=np.array([[[1.], [4.], [2.], [5.], [3.]]]),
         lablproptype=["Within-model proposal"],
+        typeplotback=typeplotback,
     )
     worker = SimpleNamespace(this=current, next=candidate, cntrswep=0)
     output_path = tmp_path / "proposal_candidates_swep000000000.png"
@@ -530,6 +1030,7 @@ def test_proposal_candidate_frame_shows_one_dimensional_data_and_residuals(tmp_p
 
     with Image.open(output_path) as image:
         assert image.width > image.height
+        assert image.convert('RGB').getpixel((0, 0)) == ((0, 0, 0) if typeplotback == 'dark' else (255, 255, 255))
     assert output_path.is_file()
 
 

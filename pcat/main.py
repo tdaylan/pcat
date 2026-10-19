@@ -222,7 +222,8 @@ class _PCATMCMCCompat(object):
         if legd is not None:
             axis.legend(loc='best', fontsize=8)
         plt.tight_layout()
-        figr.savefig(_PCATMCMCCompat._path_with_ext(path, typefileplot))
+        tdpy.apply_plot_theme(figr, kwargs.get('typeplotback'))
+        figr.savefig(_PCATMCMCCompat._path_with_ext(path, typefileplot), facecolor=figr.get_facecolor())
         plt.close(figr)
 
     @staticmethod
@@ -230,7 +231,8 @@ class _PCATMCMCCompat(object):
         ydat = np.asarray(listpara).reshape(-1)
         xdat = np.arange(ydat.size)
         figr, axis = plt.subplots(figsize=(6, 3.5))
-        axis.plot(xdat, ydat, color='k', lw=0.8)
+        foreground = tdpy.plot_background_colors(kwargs.get('typeplotback'))[1]
+        axis.plot(xdat, ydat, color=foreground, lw=0.8)
         if truepara is not None and np.isfinite(truepara):
             axis.axhline(truepara, color='g', ls='--', lw=1.)
         for indxdraw, draw in enumerate(listvarbdraw or []):
@@ -242,7 +244,8 @@ class _PCATMCMCCompat(object):
         if titl is not None:
             axis.set_title(titl)
         plt.tight_layout()
-        figr.savefig(_PCATMCMCCompat._path_with_ext(path, typefileplot))
+        tdpy.apply_plot_theme(figr, kwargs.get('typeplotback'))
+        figr.savefig(_PCATMCMCCompat._path_with_ext(path, typefileplot), facecolor=figr.get_facecolor())
         plt.close(figr)
 
     @staticmethod
@@ -253,7 +256,8 @@ class _PCATMCMCCompat(object):
         if ydat.size == 0:
             return
         figr, axis = plt.subplots(figsize=(5, 4))
-        axis.hist(ydat, bins=numbbins, histtype='step', color='k')
+        foreground = tdpy.plot_background_colors(kwargs.get('typeplotback'))[1]
+        axis.hist(ydat, bins=numbbins, histtype='step', color=foreground)
         if truepara is not None and np.isfinite(truepara):
             axis.axvline(truepara, color='g', ls='--', lw=1.)
         for draw in kwargs.get('listvarbdraw', []) or []:
@@ -264,7 +268,8 @@ class _PCATMCMCCompat(object):
         if titl is not None:
             axis.set_title(titl)
         plt.tight_layout()
-        figr.savefig(_PCATMCMCCompat._path_with_ext(path, typefileplot))
+        tdpy.apply_plot_theme(figr, kwargs.get('typeplotback'))
+        figr.savefig(_PCATMCMCCompat._path_with_ext(path, typefileplot), facecolor=figr.get_facecolor())
         plt.close(figr)
 
     @staticmethod
@@ -286,27 +291,44 @@ class _PCATMCMCCompat(object):
     def plot_atcr(path, atcr, timeatcr, strgextn='', typefileplot='pdf', **kwargs):
         atcrarr = np.asarray(atcr).reshape(-1)
         figr, axis = plt.subplots(figsize=(5, 3.5))
-        axis.plot(np.arange(atcrarr.size), atcrarr, color='k')
+        foreground = tdpy.plot_background_colors(kwargs.get('typeplotback'))[1]
+        axis.plot(np.arange(atcrarr.size), atcrarr, color=foreground)
         axis.set_xlabel('Lag')
         axis.set_ylabel('Autocorrelation')
         axis.set_title('tau = %.3g' % float(timeatcr))
         plt.tight_layout()
         pathplot = path + 'atcr%s' % strgextn
-        figr.savefig(_PCATMCMCCompat._path_with_ext(pathplot, typefileplot))
+        tdpy.apply_plot_theme(figr, kwargs.get('typeplotback'))
+        figr.savefig(_PCATMCMCCompat._path_with_ext(pathplot, typefileplot), facecolor=figr.get_facecolor())
         plt.close(figr)
 
 
 def _retr_representative_atcr(atcr, timeatcr):
-    """Return the finite autocorrelation series with the longest correlation time."""
-    atcrflat = np.asarray(atcr, dtype=float).reshape(-1, np.asarray(atcr).shape[-1])
-    timeflat = np.asarray(timeatcr, dtype=float).reshape(-1)
-    numbseri = min(atcrflat.shape[0], timeflat.size)
-    boolvalid = np.isfinite(timeflat[:numbseri]) & np.all(np.isfinite(atcrflat[:numbseri]), axis=1)
+    """Return the unmasked finite series with the longest valid correlation time.
+
+    Require one time per flattened series. Two empty inputs have no result.
+    """
+    atcrvalues = np.ma.asarray(atcr, dtype=float)
+    timeflat = np.ma.asarray(timeatcr, dtype=float).reshape(-1)
+    if atcrvalues.ndim < 1:
+        raise ValueError("Autocorrelation curves must have a lag axis")
+    if not atcrvalues.size:
+        if timeflat.size:
+            raise ValueError("Require one correlation time per autocorrelation series")
+        return None, None
+    atcrflat = atcrvalues.reshape(-1, atcrvalues.shape[-1])
+    if atcrflat.shape[0] != timeflat.size:
+        raise ValueError("Require one correlation time per autocorrelation series")
+    atcrdata = np.ma.getdata(atcrflat)
+    timedata = np.ma.getdata(timeflat)
+    boolvalid = (np.isfinite(timedata) & np.all(np.isfinite(atcrdata), axis=1)
+                 & ~np.ma.getmaskarray(timeflat)
+                 & ~np.any(np.ma.getmaskarray(atcrflat), axis=1))
     indxvalid = np.flatnonzero(boolvalid)
     if indxvalid.size == 0:
         return None, None
-    indx = indxvalid[np.argmax(timeflat[indxvalid])]
-    return atcrflat[indx], timeflat[indx]
+    indx = indxvalid[np.argmax(timedata[indxvalid])]
+    return atcrdata[indx], timedata[indx]
 
 
 def _retr_multichain_convergence(listchains, maxmrhat=1.01, minmess=200.):
@@ -1620,6 +1642,8 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         gdatmodi.this.strgproposalsubtype = 'Gaussian random walk'
     # log density [unit-cube] of an optional data-informed element proposal; zero when elements are drawn from the prior
     gdatmodi.this.lpdfpropelem = 0.
+    if getattr(gdat, 'retr_drawpropelem_state', None) is not None or getattr(gdat, 'retr_lpdfpropelem_state', None) is not None:
+        _retr_stateproposalcallbacks(gdat)
 
     # maintain a bounded history of visited unit-parameter vectors for the optional DE-MC within-model proposal
     if getattr(gdat, 'probdemc', 0.) > 0.:
@@ -1939,9 +1963,21 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
     if gdatmodi.this.indxproptype > 0:
         gdatmodi.indxsamptran = []
         if gdatmodi.this.indxproptype == 1:
-            gdatmodi.this.auxipara = retr_auxiparaelem(gdat, gmod.numbparagenrelemsing[gdatmodi.indxpopltran])
-            if getattr(gdat, 'retr_lpdfpropelem', None) is not None:
-                gdatmodi.this.lpdfpropelem = gdat.retr_lpdfpropelem(gdat, gdatmodi.this.auxipara)
+            proposal_context = _retr_proposal_context(
+                gmod,
+                gmodthis.paragenrunitfull,
+                gmodthis.indxelemfull,
+                gdatmodi.indxpopltran,
+            )
+            gdatmodi.this.auxipara = retr_auxiparaelem(
+                gdat, gmod.numbparagenrelemsing[gdatmodi.indxpopltran], proposal_context
+            )
+            log_density_forward = _retr_lpdfpropelem(
+                gdat, gdatmodi.this.auxipara, proposal_context
+            )
+            gdatmodi.this.lpdfpropelem = _retr_logproposal_penalty(
+                log_density_forward, 0.
+            )
         elif gdatmodi.this.indxproptype != 2:
             gdatmodi.this.auxipara = np.empty(gmod.numbparagenrelemsing[gdatmodi.indxpopltran])
 
@@ -2019,8 +2055,19 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
         gdatmodi.indxsamptran.append(indxparagenrfullelemdeth)
         
         gdatmodi.this.auxipara = gmodthis.paragenrscalfull[indxparagenrfullelemdeth]
-        if getattr(gdat, 'retr_lpdfpropelem', None) is not None:
-            gdatmodi.this.lpdfpropelem = -gdat.retr_lpdfpropelem(gdat, gmodthis.paragenrunitfull[indxparagenrfullelemdeth])
+        proposal_context = _retr_proposal_context(
+            gmod,
+            gmodthis.paragenrunitfull,
+            gmodthis.indxelemfull,
+            gdatmodi.indxpopltran,
+            removed_element=gdatmodi.indxelemmodi[0],
+        )
+        log_density_reverse = _retr_lpdfpropelem(
+            gdat, gmodthis.paragenrunitfull[indxparagenrfullelemdeth], proposal_context
+        )
+        gdatmodi.this.lpdfpropelem = _retr_logproposal_penalty(
+            0., log_density_reverse
+        )
 
     # jump: redraw one existing element's parameters from its own prior, keeping numbelem fixed
     if gdatmodi.this.indxproptype == 5:
@@ -2041,10 +2088,27 @@ def prop_stat(gdat, gdatmodi, strgmodl, thisindxelem=None, thisindxpopl=None, br
             return
         gdatmodi.indxsamptran.append(indxparagenrfullelemjump)
 
-        gdatmodi.this.auxipara = retr_auxiparaelem(gdat, gmod.numbparagenrelemsing[gdatmodi.indxpopltran])
-        if getattr(gdat, 'retr_lpdfpropelem', None) is not None:
-            gdatmodi.this.lpdfpropelem = gdat.retr_lpdfpropelem(gdat, gdatmodi.this.auxipara) - \
-                                         gdat.retr_lpdfpropelem(gdat, gmodthis.paragenrunitfull[indxparagenrfullelemjump])
+        proposal_context = _retr_proposal_context(
+            gmod,
+            gmodthis.paragenrunitfull,
+            gmodthis.indxelemfull,
+            gdatmodi.indxpopltran,
+            removed_element=gdatmodi.indxelemmodi[0],
+        )
+        gdatmodi.this.auxipara = retr_auxiparaelem(
+            gdat, gmod.numbparagenrelemsing[gdatmodi.indxpopltran], proposal_context
+        )
+        log_density_forward = _retr_lpdfpropelem(
+            gdat, gdatmodi.this.auxipara, proposal_context
+        )
+        log_density_reverse = _retr_lpdfpropelem(
+                gdat,
+                gmodthis.paragenrunitfull[indxparagenrfullelemjump],
+                proposal_context,
+            )
+        gdatmodi.this.lpdfpropelem = _retr_logproposal_penalty(
+            log_density_forward, log_density_reverse
+        )
         gmodnext.paragenrunitfull[indxparagenrfullelemjump] = gdatmodi.this.auxipara
 
     if gdatmodi.this.indxproptype in (3, 4):
@@ -2432,9 +2496,66 @@ def calc_probprop(gdat, gdatmodi):
             setattr(gdatmodi, 'auxiparapop%d' % l, gdatmodi.this.auxipara)
 
 
-def retr_auxiparaelem(gdat, numbparagenrelemsing):
+def _retr_stateproposalcallbacks(gdat):
+    draw = getattr(gdat, 'retr_drawpropelem_state', None)
+    log_density = getattr(gdat, 'retr_lpdfpropelem_state', None)
+    if (draw is None) != (log_density is None):
+        raise ValueError('State-conditioned element proposals require paired draw and log-density callbacks.')
+    if draw is not None and (
+        getattr(gdat, 'retr_drawpropelem', None) is not None
+        or getattr(gdat, 'retr_lpdfpropelem', None) is not None
+    ):
+        raise ValueError('Configure either state-conditioned or legacy element proposal callbacks, not both.')
+    return draw, log_density
+
+
+def _retr_proposal_context(gmod, unit_parameters, element_indices, population_index, removed_element=None):
+    from .proposal_context import ProposalContext
+
+    populations = []
+    for current_population in range(gmod.numbpopl):
+        slots = list(element_indices[current_population]) if current_population < len(element_indices) else []
+        if current_population == population_index and removed_element is not None:
+            slots.remove(removed_element)
+        dimensions = int(gmod.numbparagenrelemsing[current_population])
+        rows = []
+        for slot in slots:
+            indices = np.asarray(retr_indxparagenrelem(gmod, current_population, slot), dtype=int)
+            if indices.size != dimensions or np.any(indices < 0) or np.any(indices >= unit_parameters.size):
+                raise ValueError('Active element parameter indices are inconsistent with the proposal state.')
+            rows.append(np.asarray(unit_parameters[indices], dtype=float))
+        if rows:
+            populations.append(np.stack(rows))
+        else:
+            populations.append(np.empty((0, dimensions), dtype=float))
+    return ProposalContext(population_index, tuple(populations))
+
+
+def _retr_lpdfpropelem(gdat, unit_element, proposal_context):
+    _, state_log_density = _retr_stateproposalcallbacks(gdat)
+    if state_log_density is not None:
+        if proposal_context is None:
+            raise ValueError('State-conditioned element proposals require a ProposalContext.')
+        return float(state_log_density(gdat, unit_element, proposal_context))
+    log_density = getattr(gdat, 'retr_lpdfpropelem', None)
+    if log_density is None:
+        return 0.
+    return float(log_density(gdat, unit_element))
+
+
+def _retr_logproposal_penalty(log_density_forward, log_density_reverse):
+    """Return log q(forward) - log q(reverse), which calc_probprop subtracts."""
+    return float(log_density_forward - log_density_reverse)
+
+
+def retr_auxiparaelem(gdat, numbparagenrelemsing, proposal_context=None):
     '''Draw the unit-cube parameters of a new element from the prior or from an optional data-informed density.'''
 
+    state_draw, _ = _retr_stateproposalcallbacks(gdat)
+    if state_draw is not None:
+        if proposal_context is None:
+            raise ValueError('State-conditioned element proposals require a ProposalContext.')
+        return np.asarray(state_draw(gdat, proposal_context), dtype=float)
     retr_drawpropelem = getattr(gdat, 'retr_drawpropelem', None)
     if retr_drawpropelem is None:
         return np.random.rand(numbparagenrelemsing)
@@ -2905,7 +3026,10 @@ def setp_propelemdata(gdat, numbgrid=400):
     from .time_series import retr_dictpropelemtmpl
 
     gmod = gdat.fitt
-    if not getattr(gdat, 'boolpropelemdata', True) or getattr(gdat, 'retr_drawpropelem', None) is not None:
+    if not getattr(gdat, 'boolpropelemdata', True) or any(
+        getattr(gdat, name, None) is not None
+        for name in ('retr_drawpropelem', 'retr_drawpropelem_state')
+    ):
         return
     if gdat.typeexpr != 'fire' or gmod.numbpopl != 1 or gdat.numbpixl != 1 or gdat.numbener < 3:
         return
@@ -12687,7 +12811,7 @@ def _write_proposal_candidate_frame(gdat, gdatmodi, accepted, pathout):
     pathout = os.fspath(pathout)
     make_directory(os.path.dirname(pathout))
     print('Writing to %s...' % pathout)
-    figure.savefig(pathout, dpi=160, facecolor='white')
+    tdpy.save_plot(figure, pathout, dpi=160, typeplotback=getattr(gdat, 'typeplotback', None))
     plt.close(figure)
     return pathout
 
@@ -13841,7 +13965,7 @@ def plot_finl(gdat=None, gdatprio=None, strgcnfg=None, strgpdfn='post', gdatsimu
             if atcrplot is not None:
                 _PCATMCMCCompat.plot_atcr(pathdiag, atcrplot, timeatcrplot, strgextn='cntp')
             else:
-                print('Skipping count-map autocorrelation plot because all sampled count maps are constant.')
+                print('Skipping count-map autocorrelation plot because no finite unmasked result is available.')
         else:
             print('Skipping count-map autocorrelation plot because autocorrelation arrays are empty.')
         if gmod.numbpopl > 0 and hasattr(gdat, 'list' + strgpdfn + 'lpostotl'):
@@ -13851,13 +13975,13 @@ def plot_finl(gdat=None, gdatprio=None, strgcnfg=None, strgpdfn='post', gdatsimu
             if atcrplot is not None:
                 _PCATMCMCCompat.plot_atcr(pathdiag, atcrplot, timeatcrplot, strgextn='lpostotl')
             else:
-                print('Skipping log-posterior autocorrelation plot because the sampled values are constant.')
+                print('Skipping log-posterior autocorrelation plot because no finite unmasked result is available.')
         elif hasattr(gdat, 'atcrpara') and hasattr(gdat, 'timeatcrpara') and np.size(gdat.atcrpara) > 0 and np.size(gdat.timeatcrpara) > 0 and gdat.atcrpara.shape[1] > 0 and gdat.timeatcrpara.shape[1] > 0:
             atcrplot, timeatcrplot = _retr_representative_atcr(gdat.atcrpara, gdat.timeatcrpara)
             if atcrplot is not None:
                 _PCATMCMCCompat.plot_atcr(pathdiag, atcrplot, timeatcrplot, strgextn='para')
             else:
-                print('Skipping parameter autocorrelation plot because all sampled parameters are constant.')
+                print('Skipping parameter autocorrelation plot because no finite unmasked result is available.')
             print('Autocorrelation times:')
             if isinstance(gmod.namepara, (list, tuple, np.ndarray)):
                 listnameparaatcr = list(gmod.namepara)
@@ -17751,6 +17875,7 @@ def init( \
                     print('Warning: rescaled saved initial fitted HST count maps by %.3g to match data scale.' % factrsclinit)
         narr_task('Writing mandatory initialization state to disk.', gdat=gdat, phase='during', major=True)
         setp_propelemdata(gdat)
+        _retr_stateproposalcallbacks(gdat)
         path = gdat.pathoutpcnfg + 'gdatinit'
         try:
             writfile(gdat, path)
@@ -17945,7 +18070,15 @@ def _sample_generic(**kwargs):
     return readfile(gdat.pathoutpcnfg + 'gdatfinlpost')
 
 
-def sample(**kwargs):
+def sample(typeplotback=None, **kwargs):
+    """Run PCAT with a scoped white or dark plotting background."""
+    if typeplotback is None:
+        typeplotback = 'dark' if tdpy.plot_background_colors()[0] == 'black' else 'white'
+    with tdpy.plot_style(typeplotback):
+        return _sample_with_plot_style(typeplotback=typeplotback, **kwargs)
+
+
+def _sample_with_plot_style(**kwargs):
     typeexpr = kwargs.get('typeexpr')
     if typeexpr == 'gener':
         result = _sample_generic(**kwargs)

@@ -17,7 +17,7 @@ python 'examples/daylan+2018_strong_lens_subhalos/daylan+2018_strong_lens_subhal
 Use `--typefileplot pdf` for PDF output or `--smoke` for a short pipeline check.
 The two fits write separately under `examples/daylan+2018_strong_lens_subhalos/daylan2018_catalog/`
 and `examples/daylan+2018_strong_lens_subhalos/daylan2018_one_subhalo/`. A full run may take a long
-time; inspect chain convergence before interpreting its posterior figures.
+time. Check chain convergence before interpreting its posterior figures.
 
 The built-in simulation uses a different random seed and instrument/background
 defaults from the published realization. The run therefore recreates the

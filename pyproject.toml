@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,8 @@ version = "0.1.0"
 description = "Transdimensional probabilistic cataloging for astronomical inference."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
   { name = "Tansu Daylan", email = "tansu.daylan@gmail.com" }
 ]
@@ -29,6 +30,7 @@ dependencies = [
 
 [project.optional-dependencies]
 bokeh = ["bokeh>=3.4"]
+neural = ["torch>=2.2"]
 docs = [
   "sphinx>=8",
   "sphinx-rtd-theme>=3",

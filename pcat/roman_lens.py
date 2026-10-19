@@ -360,14 +360,48 @@ def summarize_population(
     records: list[dict[str, float | int | bool]],
     detection_threshold: float = 0.5,
 ) -> dict[str, float | int]:
-    """Return detection and localization metrics at a posterior threshold."""
-    if not 0.0 <= detection_threshold <= 1.0:
-        raise ValueError("detection_threshold must be between zero and one.")
-    truth = np.array([record["has_subhalo"] for record in records], dtype=bool)
-    probability = np.array([record["posterior_one"] for record in records], dtype=float)
+    """Return detection and localization metrics at a posterior threshold.
+
+    Each posterior_one value must be an unmasked finite real scalar in [0, 1].
+    Each has_subhalo value must be an unmasked Boolean or real scalar 0 or 1.
+    Localization indices must be unmasked integer-valued scalars; fractional
+    values are rejected rather than truncated. Integer strings remain valid.
+    The detection threshold must be an unmasked finite real scalar in [0, 1].
+    """
+    if np.ma.is_masked(detection_threshold):
+        raise ValueError("detection_threshold must be unmasked and between zero and one.")
+    threshold = np.asarray(detection_threshold)
+    if (threshold.ndim != 0 or threshold.dtype.kind not in 'biuf' or not np.isfinite(threshold)
+            or not 0.0 <= threshold <= 1.0):
+        raise ValueError("detection_threshold must be a finite real scalar between zero and one.")
+    truth_values = [record["has_subhalo"] for record in records]
+    if any(np.ma.is_masked(value) or np.ndim(value) != 0 for value in truth_values):
+        raise ValueError("has_subhalo values must be unmasked binary real scalars")
+    truth_flags = np.asarray(truth_values)
+    if truth_flags.dtype.kind not in 'biuf' or not np.isin(truth_flags, (0, 1)).all():
+        raise ValueError("has_subhalo values must be unmasked binary real scalars")
+    truth = truth_flags.astype(bool)
+    probabilities = [record["posterior_one"] for record in records]
+    if any(np.ma.is_masked(value) or np.ndim(value) != 0 or np.iscomplexobj(value)
+           for value in probabilities):
+        raise ValueError("Posterior probabilities must be unmasked real scalars")
+    probability = np.array(probabilities, dtype=float)
+    if (probability.shape != (len(records),) or not np.isfinite(probability).all()
+            or np.any((probability < 0.0) | (probability > 1.0))):
+        raise ValueError("Posterior probabilities must be finite scalars between zero and one")
     detected = probability >= detection_threshold
-    injected_index = np.array([record["injected_index"] for record in records], dtype=int)
-    recovered_index = np.array([record["recovered_index"] for record in records], dtype=int)
+    index_arrays = []
+    for field in ("injected_index", "recovered_index"):
+        values = [record[field] for record in records]
+        if any(np.ma.is_masked(value) or np.ndim(value) != 0 for value in values):
+            raise ValueError(f"{field} values must be unmasked integer-valued scalars")
+        scalars = [np.asarray(value) for value in values]
+        if any(value.dtype.kind not in 'biufUS' or
+               (value.dtype.kind == 'f' and (not np.isfinite(value) or value != np.floor(value)))
+               for value in scalars):
+            raise ValueError(f"{field} values must be unmasked integer-valued scalars")
+        index_arrays.append(np.array(values, dtype=int))
+    injected_index, recovered_index = index_arrays
     number_injected = int(truth.sum())
     number_null = len(records) - number_injected
     true_positive_interval = binomial_wilson_interval(int(detected[truth].sum()), number_injected)

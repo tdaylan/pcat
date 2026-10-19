@@ -54,6 +54,7 @@ These examples showcase the PCAT model families used by the papers. They do not 
 - `variable_number_stellar_flares/`: transdimensional catalog of a variable number of stellar flares in a simulated photometric time series
 - `transit_timing_variations/`: fixed-dimensional posterior sampling of simulated transit times with PCAT's likelihood and Ephesos's forward model
 - `proposal_profiling/`: per-sweep execution time, acceptance, and runtime share for all six proposal types, plus pipeline-phase timings on the simulated Voigt spectrum
+- `neural_proposal_efficiency/`: paired prior, data-informed, and neural birth comparison on held-out simulated two-planet radial-velocity scenes, with count-posterior agreement and ESS per call/second
 - `proposal_state_animation/`: retained states, every Voigt-line proposal, and a split/merge Jacobian acceptance comparison
 - `burn_in_strategies/`: fixed, adaptive, likelihood-tempered, and Student-t within-model proposals on correlated and bimodal simulated targets
 - `kl_divergence_gaussian/`: PCAT's posterior-to-prior forward KL estimate on a conjugate Gaussian target, checked against its analytic value
@@ -86,7 +87,7 @@ python -m pip install -e '.[examples]'
 python examples/variable_number_stellar_flares/variable_number_stellar_flares.py --smoke
 ```
 
-Omit `--smoke` for the default 100,000-sweep run. Sampling replaces the example's generated output state; use `--skip-sampling` to rebuild figures from the existing posterior instead.
+Omit `--smoke` for the default 100,000-sweep run. Sampling replaces the example's generated output state. Use `--skip-sampling` to rebuild figures from the existing posterior instead.
 
 ![Simulated light curve and PCAT model](variable_number_stellar_flares/visuals/variable_number_stellar_flares_light_curve_fit.png)
 
@@ -144,9 +145,135 @@ Most of the mean sweep time goes to bookkeeping around proposals (process, propo
 
 ![Time breakdown by internal pipeline phase](proposal_profiling/visuals/proposal_time_breakdown_by_phase.png)
 
+## Neural proposal efficiency
+
+The benchmark trains a conditional neural density on simulated radial-velocity
+systems, then compares prior, existing data-informed, and neural births on
+disjoint held-out two-planet scenes, with two independent chains per method and
+scene. Its fixed input uses 128 logarithmically spaced trial periods and stores
+the log periodogram improvement, unit-scaled amplitude, and sine/cosine phase
+at each period. Prior-redraw jumps are disabled to isolate birth/death proposal
+densities. Paired runs use the same likelihood, priors, count model,
+initialization seeds, and sweep budget. The output reports count-chain R-hat,
+catalog-count-posterior total variation, count and log-likelihood effective
+sample size (ESS), ESS per likelihood call and per second, training-amortized
+ESS per second, birth/death acceptance, training time, and bootstrap
+intervals across validation scenes. A gain requires well-mixed chains,
+adequate posterior agreement, and favorable efficiency ratios. Acceptance rate
+alone does not establish faster exploration. The script marks a gain supported
+only when the lower 95% paired
+bootstrap bounds for both count and log-likelihood ESS per call exceed 1, all
+count and log-likelihood R-hat values are at most 1.1, median count-posterior
+total variation is at most 0.1, and the lower 95% paired bootstrap bound for
+training-amortized count ESS per second exceeds 1 against each baseline.
+
+The available 12,000-sweep pilots each used one held-out scene and two chains
+per method. With a 5% uniform proposal component, neural count ESS per call
+was 0.48 times the prior value, count R-hat was 1.37, and count-posterior
+total variation from the prior was 0.43. With a 50% uniform component, these
+values were 0.93, 1.23, and 0.13. The neural log-likelihood ESS-per-call ratio
+was 0.77 and log-likelihood R-hat was 3.75. Neither pilot passed the stated
+criteria. The single-scene bootstrap intervals do not measure scene-to-scene
+variability, and these runs do not support an efficiency or posterior-recovery
+claim.
+
+Both pilots used the data-only callback. They do not evaluate the
+state-conditioned callback interface.
+
+A separate 400-sweep state-conditioned smoke run used one held-out scene and
+two chains. It did not pass count-posterior agreement, with total-variation
+distances of 0.32 from the prior baseline and 0.75 from the data-informed
+baseline. It verifies benchmark execution only and is not a performance result.
+
+To run a multi-scene state-conditioned comparison, provide a fresh run ID:
+
+```bash
+python examples/neural_proposal_efficiency/neural_proposal_efficiency.py \
+	--proposal-conditioning state \
+	--run-id state_conditioned_efficiency_v1
+```
+
+The run stores its conditioning mode, training dimensions, seeds, environment,
+and per-chain traces in the result JSON. Do not interpret the smoke run as an
+efficiency estimate.
+
+I report zero ESS for constant count traces as a conservative convention,
+including traces shorter than four samples. Missing, masked, or nonfinite
+samples raise an error instead of producing an efficiency score. This
+convention does not establish convergence of the catalog or its parameters.
+Efficiency comparisons with a zero-ESS baseline are undefined and reported as
+`NaN`, including zero divided by zero. Their bootstrap intervals remain
+undefined and cannot support an efficiency-gain claim. Zero neural ESS with a
+positive baseline retains a ratio of zero. Existing saved results are not
+rewritten automatically.
+Bootstrap comparisons must be one-dimensional and use a positive integer
+resampling budget. Empty, masked, or nonfinite comparisons produce an undefined
+interval without resampling, filling values, or dropping scenes. Valid finite
+inputs retain their seeded intervals exactly.
+Count R-hat is undefined (`NaN`) when all chains stay at the same count.
+Constant chains stuck at different counts retain infinite R-hat. Neither case
+provides mixing evidence, and the efficiency-claim checks require finite
+per-scene R-hat values for both compared methods.
+The gain predicate also requires fully available, aligned one-dimensional
+evidence for the same validation scenes and ordered two-bound confidence
+intervals. Masked, empty, scalar, matrix, or mismatched evidence and malformed
+intervals cannot support a gain claim. Values are not filled or silently dropped,
+and the existing gain, mixing, and posterior-agreement thresholds are unchanged.
+ESS and R-hat share a full-trace check for missing or nonfinite samples. R-hat
+validates before aligning unequal chain lengths, so unavailable prefix samples
+cannot disappear during alignment. Valid unequal-length inputs still use the
+final samples up to the shortest chain's length. No missing values are filled.
+The reported median count R-hat includes every validation scene. If any scene's
+value is undefined, that aggregate remains `NaN`. Undefined scenes are not
+silently removed, and an all-undefined collection produces no median warning.
+Each chain must supply a positive integral likelihood-call count and a finite
+positive elapsed time. Training overhead must be finite and nonnegative, with
+absent overhead treated as zero. Invalid costs raise `ValueError` before
+aggregation. Call counts are summed as Python integers without truncation.
+The benchmark's ESS estimator caps its output at the retained sample count.
+Each supplied count or log-likelihood ESS must therefore be a finite real
+scalar between zero and its own trace length. Invalid metadata raises
+`ValueError` before aggregation. Values are neither clipped nor recomputed,
+and valid fractional or zero ESS values are retained.
+Per-chain birth and death acceptance rates must also be finite real scalars in
+`[0, 1]`. Invalid or masked rates raise `ValueError` before averaging. Valid
+zero and unit acceptance rates retain their existing equal-chain means, without
+clipping or changing the underlying proposal counts.
+Saved acceptance flags are checked before Boolean conversion. Proposal IDs
+must be finite nonnegative integers, acceptance values must be binary zero/one,
+and the flattened traces must have matching lengths. Invalid HDF5 metadata
+raises `ValueError`. Other nonnegative proposal IDs remain available for future
+move types, and a move with no recorded attempts retains its existing zero rate.
+Posterior count and log-likelihood traces must be nonempty and have matching
+flattened lengths. Raw count values must be finite integers in the supported
+planet-count range before integer conversion. Log-likelihood samples must be
+finite real numbers. Invalid traces raise `ValueError` before ESS or posterior
+probabilities are computed, without truncating counts, clipping, or rewriting
+the HDF5 file.
+Count-posterior summaries retain equal weights for each chain, including chains
+with unequal retained lengths. Each input distribution must cover every
+supported count with finite real probabilities in `[0, 1]` and sum to one within
+its floating-point rounding tolerance. Invalid or masked distributions raise
+`ValueError` before averaging. Probabilities are not filled, clipped, or
+renormalized.
+
+Run the five-scene comparison from the repository root with:
+
+```bash
+python examples/neural_proposal_efficiency/neural_proposal_efficiency.py
+```
+
+Use `--smoke` to check the complete training-and-sampling path quickly. Its
+two short chains per proposal method check execution. They do not establish
+convergence or performance.
+
+Choose a fresh `--run-id` for each comparison. Existing checkpoints, results,
+efficiency figures, or configured chain outputs raise `FileExistsError` before training
+starts, preserving those artifacts. Use one process for each run ID.
+
 ## PCAT, emcee, and dynesty
 
-The data are simulated: 40 epochs over 30 d of a 5 m/s sinusoid with a 3.7 d period and 2 m/s noise. The three samplers share the likelihood and uniform priors on amplitude (0 to 15 m/s), period (2 to 6 d), and phase (0 to 2&pi;). PCAT (60,000 sweeps, adaptive proposal scales) and dynesty (500 live points) place all samples in the true period mode and agree on the marginal posteriors, e.g. period 3.722 &plusmn; 0.023 d. emcee (16 walkers, 4,000 steps, initialized across the prior) places 12% of its samples in secondary period modes, so its effective sample size (ESS) is not meaningful. dynesty is the most efficient on this fixed-dimensional problem, with 900 effective samples per second against 35 for PCAT, and it also returns the log-evidence, &minus;23.7 &plusmn; 0.3. PCAT evaluates the likelihood 2.6 times per sweep in this mode. Its distinct capability is transdimensional sampling, where neither emcee nor dynesty can change the number of model components within one run.
+The simulated dataset contains 40 epochs over 30 d of a 5 m/s sinusoid with a 3.7 d period and 2 m/s noise. The three samplers share the likelihood and uniform priors on amplitude (0 to 15 m/s), period (2 to 6 d), and phase (0 to 2&pi;). PCAT (60,000 sweeps, adaptive proposal scales) and dynesty (500 live points) place all samples in the true period mode and agree on the marginal posteriors, e.g. period 3.722 &plusmn; 0.023 d. emcee (16 walkers, 4,000 steps, initialized across the prior) places 12% of its samples in secondary period modes, so its effective sample size (ESS) is not meaningful. dynesty is the most efficient on this fixed-dimensional problem, with 900 effective samples per second against 35 for PCAT, and it also returns the log-evidence, &minus;23.7 &plusmn; 0.3. PCAT evaluates the likelihood 2.6 times per sweep in this mode. Its distinct capability is transdimensional sampling, where neither emcee nor dynesty can change the number of model components within one run.
 
 ![Marginal posteriors](sampler_comparison_emcee_dynesty/visuals/sampler_comparison_marginal_posteriors.png)
 

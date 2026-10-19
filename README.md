@@ -41,6 +41,13 @@ association, and detector point-spread functions.
 
 ## Posterior samples
 
+`pcat.sample(typeplotback='dark', ...)` selects black plot backgrounds with
+white axes for that call. The default is white with black axes, or the theme
+already selected through TDpy. The caller's plotting settings are restored
+after sampling. Both `plot_grid` and `plot_population_grid` accept
+`typeplotback`. Dark population-grid outputs use a `_dark` suffix to avoid
+reusing cached light plots.
+
 ![Eight changing PCAT inference views and the centered PCAT logo](examples/pcat_posterior_samples.gif)
 
 Each synchronized frame combines eight evolving inference views with the
@@ -87,8 +94,8 @@ candidate animation contains all 120 sweeps.
 ### Jacobian in split and merge moves
 
 PCAT splits a parent amplitude-coordinate value $F$ into $rF$ and $(1-r)F$.
-This amplitude-fraction transformation contributes $\log|J|=\log F$ to the split acceptance ratio; the
-reverse merge uses the negative term. The example records the unclipped log
+This amplitude-fraction transformation contributes $\log|J|=\log F$ to the split acceptance ratio.
+The reverse merge uses the negative term. The example records the unclipped log
 acceptance ratio, then compares each prior-valid proposal with a counterfactual
 that omits only the Jacobian. Its acceptance curves show how the median
 split/merge Jacobians change acceptance probability at a fixed remainder of the
@@ -154,7 +161,7 @@ transdimensional application of this more general approach.
 ## Custom likelihoods
 
 Likelihood construction is separate from model dimensionality. A model or
-metamodel defines the candidate parameterized predictions; the likelihood
+metamodel defines the candidate parameterized predictions. The likelihood
 scores those predictions against data. To use a custom likelihood for
 inference within one model, define a callback with signature
 ``retr_llik(gdat, strgmodl, values)`` that returns the log likelihood only.
@@ -179,7 +186,7 @@ result = sample_fixed(
 )
 ```
 
-``"self"`` parameters have uniform priors between their minima and maxima;
+``"self"`` parameters have uniform priors between their minima and maxima.
 ``"gaus"`` parameters use the specified means and standard deviations. PCAT
 proposes in unit-prior coordinates and applies its inverse-CDF transforms.
 Generic fixed-dimensional runs set birth/death and split/merge probabilities to
@@ -197,11 +204,11 @@ chains and discards their burn-in.
 
 By default, type-0 moves perturb one parameter at a time. Set
 ``probpropblock`` above zero to mix in correlated block moves using
-``proposal_correlation``; ``factpropblock`` scales those block increments.
+``proposal_correlation``. ``factpropblock`` scales those block increments.
 These moves retain PCAT's standard acceptance, adaptation, persistence, and
 final-processing machinery. Set ``probdemc`` above zero to mix in
 differential-evolution jumps (ter Braak 2006) drawn from a bounded history of
-the chain's own visited states (``numbdemchist``, default 1,000 states); this
+the chain's own visited states (``numbdemchist``, default 1,000 states). This
 proposal is symmetric, so it needs no change to the acceptance ratio and can
 help mixing when parameters are correlated in ways ``proposal_correlation``
 does not capture.
@@ -219,11 +226,98 @@ Within-model updates can also mix in ``probstud`` Student-t(5) steps. These
 independent, variance-matched increments have heavier tails than the default
 Gaussian random walk and use the same symmetric Metropolis acceptance. They
 apply to fixed-dimensional parameters and existing catalog elements without
-changing catalog size; ``probdemc + probstud`` must be at most one. In a seeded
+changing catalog size. ``probdemc + probstud`` must be at most one. In a seeded
 8,000-sweep comparison on the bimodal target, the Student-t mixture improved
 mode switches from 5 to 17 and ESS per second from 0.2 to 1.8. On the correlated
 Gaussian target it reduced ESS per second from 3.9 to 2.2, so it is a targeted
 option rather than a universal replacement.
+
+### Neural birth proposals
+
+I provide an optional conditional neural density for proposing transdimensional
+births and prior-redraw jumps. Install the extra with ``python -m pip install 'pcat[neural]'``. Train
+it on simulated pairs of fixed-length observation features and element
+parameters in unit-prior coordinates. The RV benchmark features 128 trial
+periods with log periodogram power, unit-scaled amplitude, and sine/cosine
+phase. The fitted mixture includes a uniform
+component, keeping proposal density positive across the full prior volume.
+Freeze the fitted proposal before production sampling. PCAT uses its exact log
+density in birth/death and jump Hastings corrections.
+
+```python
+from pcat import NeuralElementProposal, sampling
+
+proposal = NeuralElementProposal.fit(
+	condition_features,
+	simulated_element_parameters,
+	uniform_fraction=0.05,
+	seed=12,
+)
+proposal.save("analysis/neural_birth.pt")
+proposal = NeuralElementProposal.load("analysis/neural_birth.pt")
+
+result = sampling.sample(
+	**run_configuration,
+	neural_proposal_features=features_for_this_run,
+	probtran=0.4,
+	**proposal.callbacks(),
+)
+```
+
+The feature vector supplied at sampling must follow the same definition used
+to create ``condition_features``. The neural density proposes candidate
+elements while PCAT's transdimensional sampler and posterior target remain
+unchanged. On held-out simulations, compare posterior recovery and effective
+sample size per unit compute alongside the acceptance fraction. See
+``docs/sampling.rst`` for the callback and correction details.
+
+For a density that also depends on the live catalog, train on conditions built
+from simulated catalog states and use the paired state-conditioned callbacks.
+The feature builder must be a module-level, picklable callable because PCAT
+serializes run configurations for worker chains.
+
+```python
+import numpy as np
+
+def retr_proposal_condition(gdat, context):
+	return np.concatenate((
+		gdat.neural_proposal_features,
+		np.asarray(context.element_counts, dtype=float),
+	))
+
+state_callbacks = proposal.state_callbacks(retr_proposal_condition)
+result = sampling.sample(
+	**run_configuration,
+	neural_proposal_features=features_for_this_run,
+	probtran=0.4,
+	**state_callbacks,
+)
+```
+
+The training conditions must use the same observation features and catalog
+summary. A death's reverse-birth density uses the catalog after the removed
+element is omitted. The default radial-velocity efficiency benchmark uses the
+data-only callback. A flat-likelihood regression does verify recovery of a uniform zero-to-three
+element count prior with a normalized count-conditioned proposal. This checks
+one controlled target, not general efficiency or calibration. A 400-sweep
+state-conditioned smoke run on one held-out scene failed count-posterior
+agreement, with total-variation distances 0.32 from the prior and 0.75 from the
+data-informed baseline. It checks benchmark execution only, not performance.
+For a multi-scene comparison, use a fresh run ID and pass
+``--proposal-conditioning state`` to the benchmark script.
+
+When building an RV configuration with ``retr_dictpcatrvel``, set
+``boolmakepropelem=False`` before adding state callbacks. The helper otherwise
+installs its data-only matched-filter proposal by default.
+
+The paired [RV efficiency benchmark](examples/neural_proposal_efficiency/neural_proposal_efficiency.py)
+trains on separate simulated systems and compares prior, existing data-informed,
+and neural element proposals on held-out two-planet scenes. The default uses
+five scenes and two independent chains per method and scene, reporting count
+and log-likelihood R-hat and ESS, posterior agreement, ESS per call, run ESS
+per second including proposal setup, and training-amortized ESS per second. Its
+short ``--smoke`` mode checks that the pipeline runs. Assess efficiency and
+posterior agreement with the multi-scene run.
 
 ## Sampler utilities
 
@@ -252,8 +346,8 @@ fixed sweep count. Relevant settings:
 With ``numbproc`` == 1, R-hat/ESS are computed by splitting the single chain
 in half. With ``numbproc`` > 1, each worker shares its running diagnostic
 statistics with the others via a ``multiprocessing.Manager``-backed
-dictionary, and R-hat/ESS are computed genuinely across all worker chains;
-once every worker independently observes the shared stop signal, all workers
+dictionary, and R-hat/ESS are computed genuinely across all worker chains.
+Once every worker independently observes the shared stop signal, all workers
 stop and their retained samples are truncated to a common length before
 final aggregation. Fixed-length runs remain available by explicitly disabling
 ``boolcheckconv``.
@@ -267,8 +361,8 @@ features. Single-worker runs cannot report cross-worker R-hat. Existing saved
 posteriors can be plotted with ``pcat.plotting.plot_posterior_convergence``.
 
 The variable-planet radial-velocity example produces the following fixed-parameter
-and planet-count traces from its short demonstration chain. These show how to
-inspect mixing; the run is too short to establish convergence.
+and planet-count traces from its short demonstration chain. They show how to
+inspect mixing. The run is too short to establish convergence.
 
 ![Fixed-parameter posterior trace from simulated radial velocities](examples/variable_number_exoplanets_radial_velocity/visuals/fixed_parameter_trace.png)
 
@@ -279,7 +373,7 @@ inspect mixing; the run is too short to establish convergence.
 Call ``pcat.diagnostics.estimate_kl_divergence`` when a forward KL estimate is
 needed. It computes the sample mean of ``log p - log q`` from PCAT draws from
 ``P`` and normalized log-density callbacks for ``P`` and ``Q``. Its reported
-Monte Carlo error accounts for chain autocorrelation; finite-sample estimates
+Monte Carlo error accounts for chain autocorrelation. Finite-sample estimates
 are not clipped at zero. The ``kl_divergence_gaussian`` example compares a PCAT
 posterior-to-prior estimate with the exact Gaussian value.
 
@@ -328,7 +422,7 @@ compares all three on the same sinusoidal model with one parameter dimension,
 using posterior agreement, mode recovery, effective samples per second,
 likelihood calls, and evidence. A second experiment compares variable planet
 counts from zero to three. PCAT samples all counts in one run, while dynesty
-needs a separate evidence run per count; emcee requires one parameter dimension
+needs a separate evidence run per count. Emcee requires one parameter dimension
 per chain and cannot make that comparison. The example reports count-posterior
 agreement, period recovery, likelihood evaluations, and wall time. These seeded
 simulations show different capabilities and costs rather than a universal
@@ -352,9 +446,9 @@ python examples/sampler_comparison_emcee_dynesty/sampler_comparison_emcee_dynest
 
 ## Applications
 
-### [Daylan et al. (2017): Unresolved Fermi-LAT sources](examples/daylan+2017_fermi_point_sources/)
+### [Unresolved Fermi-LAT sources (Daylan et al., 2017)](examples/daylan+2017_fermi_point_sources/)
 
-### [Daylan et al. (2018): Strong-lens subhalos](examples/daylan+2018_strong_lens_subhalos/)
+### [Strong-lens subhalos (Daylan et al., 2018)](examples/daylan+2018_strong_lens_subhalos/)
 
 ### [Keplerian signals in radial-velocity data](examples/variable_number_exoplanets_radial_velocity/variable_number_exoplanets_radial_velocity.ipynb)
 
@@ -391,7 +485,7 @@ python examples/variable_number_exoplanets_radial_velocity/variable_number_exopl
 
 ### Roman strong-lens catalogs
 
-The executable example uses the compact PCAT Roman benchmark to simulate 100 strong-lens images. Half contain one dark-matter perturber drawn at a candidate position around the macro Einstein ring, and half contain no perturber. The catalog approximation compares zero- and one-perturber models after Roman point-spread-function convolution and Poisson plus read noise. Its diagnostic follows one representative lens from simulated detector input through the macro-only model and residual, then summarizes the final population-level catalog probabilities.
+The executable example uses the compact PCAT Roman benchmark to simulate 100 strong-lens images. Half contain one dark-matter perturber drawn at a candidate position around the macro Einstein ring, and half contain no perturber. The catalog approximation compares zero- and one-perturber models after Roman point-spread-function convolution and Poisson plus read noise. The figure follows one representative lens from simulated detector input through the macro-only model and residual, then summarizes the final population-level catalog probabilities.
 
 ```bash
 python examples/roman_strong_lens_perturber_catalog/roman_strong_lens_perturber_catalog.py --typefileplot png
@@ -403,7 +497,7 @@ For the fixed seed, the approximate catalog classifier recovers 38% of injected 
 
 ### Mejiro Roman strong-lens inference
 
-The [Python example](examples/mejiro_roman_strong_lens/mejiro_roman_strong_lens.py) and [notebook](examples/mejiro_roman_strong_lens/mejiro_roman_strong_lens.ipynb) show mejiro simulating the SLSim ``SampleGG`` galaxy-galaxy lens in Roman WFI F129, then using PCAT to infer the lens and source parameters from the simulated Poisson exposure. The likelihood uses the same lenstronomy model as the simulation. Four chains start from random prior draws; a second fit assumes a PSF 30% wider than the simulated one. This is a simulation, not an observation from Roman. Running it requires an editable mejiro install and ``roman-technical-information``.
+The [Python example](examples/mejiro_roman_strong_lens/mejiro_roman_strong_lens.py) and [notebook](examples/mejiro_roman_strong_lens/mejiro_roman_strong_lens.ipynb) show mejiro simulating the SLSim ``SampleGG`` galaxy-galaxy lens in Roman WFI F129, then using PCAT to infer the lens and source parameters from the simulated Poisson exposure. The likelihood uses the same lenstronomy model as the simulation. Four chains start from random prior draws. A second fit assumes a PSF 30% wider than the simulated one. Every image in this example is simulated. Roman has not observed these systems. Running it requires an editable mejiro install and ``roman-technical-information``.
 
 Run a short pipeline check from the repository root with:
 
@@ -417,7 +511,7 @@ Omit ``--smoke`` for the full 60,000-sweep run. The example also compares the po
 
 ### Model misspecification
 
-The [flare-catalog script](examples/mismodeling_flare_catalog/mismodeling_flare_catalog.py) and [notebook](examples/mismodeling_flare_catalog/mismodeling_flare_catalog.ipynb) compare fits using the data-generating models with fits using different forward models. Four fast-rise, exponential-decay (FRED) flares are injected into each simulated light curve. One fit replaces the asymmetric FRED profiles with symmetric Gaussian flares; another replaces a 2% modulated baseline with a constant level. In the recorded run, the Gaussian fit reports 15.1 flares on average instead of four, despite a chi-squared per bin of 0.99, close to 0.97 for the correct model.
+The [flare-catalog script](examples/mismodeling_flare_catalog/mismodeling_flare_catalog.py) and [notebook](examples/mismodeling_flare_catalog/mismodeling_flare_catalog.ipynb) compare fits using the data-generating models with fits using different forward models. Four fast-rise, exponential-decay (FRED) flares are injected into each simulated light curve. One fit replaces the asymmetric FRED profiles with symmetric Gaussian flares. Another replaces a 2% modulated baseline with a constant level. In the recorded run, the Gaussian fit reports 15.1 flares on average instead of four, despite a chi-squared per bin of 0.99, close to 0.97 for the correct model.
 
 Run a short check with:
 

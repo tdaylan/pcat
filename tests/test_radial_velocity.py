@@ -91,8 +91,47 @@ def test_data_informed_element_proposal_is_a_normalized_density_on_the_unit_cube
     assert np.mean(np.abs(np.log(peri / 17.)) < 0.02) > 0.5
 
 
+def test_rv_configuration_can_skip_data_informed_proposal_setup(tmp_path, monkeypatch):
+    from importlib import import_module
+
+    radial_velocity = import_module("pcat.radial_velocity")
+
+    def unexpected_proposal(*args, **kwargs):
+        raise AssertionError("prior-only configuration should skip matched-filter setup")
+
+    monkeypatch.setattr(radial_velocity, "retr_dictpropelem", unexpected_proposal)
+    time = np.array([1.0, 2.0, 4.0, 7.0])  # [day]
+    velocity = np.array([1.0, -2.0, 0.5, 2.0])  # [m/s]
+    uncertainty = np.ones(time.size)  # [m/s]
+
+    configuration = radial_velocity.retr_dictpcatrvel(
+        time,
+        velocity,
+        uncertainty,
+        np.zeros(time.size, dtype=int),
+        str(tmp_path),
+        "prior_only",
+        maxmnumbplan=3,
+        boolmakepropelem=False,
+    )
+
+    assert "retr_drawpropelem" not in configuration
+    assert "retr_lpdfpropelem" not in configuration
+
+
 def retr_llik_flat(gdat, strgmodl, cntpmodl):
     return 0.
+
+
+def retr_drawpropelem_countconditioned(gdat, context):
+    unit = np.random.rand(5)
+    unit[0] = np.random.beta(context.element_counts[0] + 1, 1)
+    return unit
+
+
+def retr_lpdfpropelem_countconditioned(gdat, unit, context):
+    count = context.element_counts[0]
+    return np.log(count + 1) + count * np.log(unit[0])
 
 
 def test_number_of_planets_follows_its_uniform_prior_when_the_likelihood_is_flat(tmp_path):
@@ -107,6 +146,10 @@ def test_number_of_planets_follows_its_uniform_prior_when_the_likelihood_is_flat
                                  maxmnumbplan=3, retr_llik=retr_llik_flat, factpriodoff=0., probjump=0.2,
                                  numbswep=30000, numbsamp=3000, boolmakeplot=False, boolmakeplotinit=False,
                                  boolcheckconv=False, typeverb=0, inittype='rand', typeseed=1)
+    dictpcat.pop('retr_drawpropelem')
+    dictpcat.pop('retr_lpdfpropelem')
+    dictpcat['retr_drawpropelem_state'] = retr_drawpropelem_countconditioned
+    dictpcat['retr_lpdfpropelem_state'] = retr_lpdfpropelem_countconditioned
     sampling.sample(**dictpcat)
     posterior = readfile(str(tmp_path / 'pcat_runs' / 'flat' / 'data' / 'outp' / 'flat' / 'gdatfinlpost'))
     frac = np.bincount(np.asarray(posterior.listpostnumbelem).astype(int).ravel(), minlength=4) / 3000.

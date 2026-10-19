@@ -9,7 +9,7 @@ PCAT requires Python 3.10 or newer. Its runtime dependencies are declared in
 Pillow, Seaborn, cloudpickle, Chalcedon, and TDpy. The optional ``examples``
 dependency group adds Astroquery, Ephesos, dynesty, and emcee.
 Ephesos supplies the transit-time forward model used by the TTV posterior
-example. Astroquery downloads the public JWST spectrum from MAST; the other
+example. Astroquery downloads the public JWST spectrum from MAST. The other
 packages support sampler-comparison, TTV, and stellar-flare workflows.
 
 For development with sibling repositories, install TDpy and PCAT in editable

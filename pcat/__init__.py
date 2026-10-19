@@ -18,6 +18,8 @@ from .fixed import sample_fixed, sample_fixed_chains, sample_allesfitter_pcat, s
 from .associate import associate_catalogs
 from .diagnostics import binomial_wilson_interval, estimate_kl_divergence, posterior_convergence
 from .image import forward_model_image, make_gaussian_scene
+from .neural_proposals import NeuralElementProposal
+from .proposal_context import ProposalContext
 from .paths import get_data_path, get_repository_path, get_visuals_path
 from .plotting import plot_grid
 from .population_grid import plot_population_grid

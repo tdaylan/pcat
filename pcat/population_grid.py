@@ -394,14 +394,16 @@ def _plot_population_histodim(listmantlabl, listpara, k, listlablparatotl, indxp
         axis.set_title(titl)
     axis.set_xlim(limt[k]) 
     plt.tight_layout()
+    tdpy.apply_plot_theme(axis.figure)
     if path is not None:
         print('Writing to %s...' % path)
-        plt.savefig(path)
+        plt.savefig(path, facecolor=axis.figure.get_facecolor())
         plt.close()
     else:
         plt.show()
 
 
+@tdpy.plot_style()
 def plot_population_grid(
               # a list with length equal to the number of parameters, 
               # Each element of the list should itself be list of two strings, where
@@ -550,13 +552,18 @@ def plot_population_grid(
               
               # Boolean flag to diagnose the code
               booldiag=True, \
+              typeplotback=None, \
               
              ):
     
     '''
     Make a corner plot of a multivariate distribution.
     '''
-    
+    if typeplotback is not None:
+        tdpy.configure_plot_style(typeplotback)
+    if tdpy.plot_background_colors()[0] == 'black':
+        strgextn = (strgextn + '_dark') if strgextn else 'dark'
+
     if typeverb > 1:
         print('pcat.plot_population_grid() initialized...')
     
@@ -1197,7 +1204,8 @@ def plot_population_grid(
             path = pathbase + 'pies_%s.%s' % (strgextn, typefileplot)
             print('Writing to %s...' % path)
             
-            figr.savefig(path, bbox_inches='tight')
+            tdpy.apply_plot_theme(figr)
+            figr.savefig(path, bbox_inches='tight', facecolor=figr.get_facecolor())
             plt.close(figr)
     
     if boolplotpair:
@@ -1287,7 +1295,8 @@ def plot_population_grid(
                                     axis.set_title(titl)
                                 
                                 print('Writing to %s...' % path)
-                                figr.savefig(path, bbox_inches='tight')
+                                tdpy.apply_plot_theme(figr)
+                                figr.savefig(path, bbox_inches='tight', facecolor=figr.get_facecolor())
                                 plt.close(figr)
     
     # number of population groups
@@ -1353,11 +1362,12 @@ def plot_population_grid(
             
             figr.tight_layout()
             plt.subplots_adjust(wspace=0.05, hspace=0.05)
+            tdpy.apply_plot_theme(figr)
             
             if pathbase is not None:
                 path = pathbase + 'pmar_%s%s_%s.%s' % (strgextn, strgpgrp, strglisttypeplottdim, typefileplot)
                 print('Writing to %s...' % path)
-                figr.savefig(path, dpi=300)
+                figr.savefig(path, dpi=300, facecolor=figr.get_facecolor())
                 plt.close(figr)
             else:
                 plt.show()
