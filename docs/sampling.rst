@@ -143,10 +143,21 @@ checks recovery of the configured uniform count prior over zero to three
 elements. This is a controlled sampler-correctness test, not evidence of
 efficiency or calibration across astronomical models. A separate 400-sweep
 state-conditioned smoke run on one held-out scene failed count-posterior
-agreement and is only evidence that the benchmark path executes. Run a
-multi-scene state-conditioned comparison with a fresh run ID using
+agreement and is only evidence that the benchmark path executes. A completed
+three-scene run with 12,000 sweeps per chain also failed the pre-specified gain
+check. State-conditioned count ESS per likelihood call was 0.029 times prior
+(95% scene-bootstrap interval 0.029 to 0.60) and 1.20 times data-informed
+(0.11 to 1.53). Median count-posterior total variation was 0.44 from prior and
+0.57 from data-informed. Neural log-likelihood R-hat was 1.35, 1.00, and 2.32
+across the scenes, exceeding 1.1 in two. This is evidence against a gain for
+this training setup, not a universal result. Run additional state-conditioned comparisons
+with a fresh ID using
 ``python examples/neural_proposal_efficiency/neural_proposal_efficiency.py
 --proposal-conditioning state --run-id state_conditioned_efficiency_v1``.
+The experimental ``--state-feature-mode residual`` instead computes the
+periodogram from the velocity residual after subtracting the catalog model
+represented in the current context. Its one-scene smoke run checks execution
+only; no performance result is established for this mode.
 
 Acceptance probability
 ----------------------

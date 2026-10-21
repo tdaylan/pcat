@@ -168,7 +168,7 @@ def sample_allesfitter_pcat(datadir):
 
 
 
-# Posterior sampling with a dictionary interface; PCAT is the only sampler in the ecosystem.
+# Bounds for the dictionary-style posterior-sampling interface.
 def retr_limtpara(scalpara, minmpara, maxmpara, meanpara, stdvpara):
     
     numbpara = len(scalpara)

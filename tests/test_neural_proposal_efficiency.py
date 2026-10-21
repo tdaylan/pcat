@@ -68,6 +68,64 @@ def test_state_conditioned_training_pairs_have_consistent_features_and_elements(
     assert np.all((elements >= 0.0) & (elements <= 1.0))
 
 
+def test_residual_state_features_subtract_the_context_catalog_model():
+    from types import SimpleNamespace
+    from pcat import ProposalContext
+
+    time = np.linspace(8000.0, 8600.0, 60)
+    reference_time = 0.5 * (time[0] + time[-1])
+    maximum_period = 1200.0
+    context_elements = np.array([[0.15, 0.4, 0.2, 0.1, 0.7]])
+    target_element = np.array([0.8, 0.6, 0.8, 0.05, 0.3])
+    context_planets = BENCHMARK._draw_planets(context_elements, maximum_period)
+    target_planets = BENCHMARK._draw_planets(target_element[None, :], maximum_period)
+    velocity = BENCHMARK._render_planets(
+        time, np.concatenate((context_planets, target_planets)), reference_time
+    ) + np.random.default_rng(9).normal(0.0, BENCHMARK.MEASUREMENT_UNCERTAINTY, time.size)
+    gdat = SimpleNamespace(
+        neural_state_feature_mode="residual",
+        neural_maximum_period=maximum_period,
+        timervel=time,
+        timervelrefr=reference_time,
+        rvelobsv=velocity,
+        neural_proposal_features=np.zeros(512),
+    )
+    context = ProposalContext(0, (context_elements,))
+
+    actual = BENCHMARK._state_condition_features(gdat, context)
+    residual = velocity - BENCHMARK._render_planets(time, context_planets, reference_time)
+    expected_data_features = BENCHMARK._condition_feature(
+        time, residual, reference_time, maximum_period
+    )
+
+    np.testing.assert_allclose(actual[:512], expected_data_features)
+    np.testing.assert_allclose(actual[512:], BENCHMARK._catalog_state_summary(context_elements))
+
+
+def test_residual_training_conditions_encode_the_leave_one_out_catalog():
+    time = np.linspace(8000.0, 8600.0, 30)
+    reference_time = 0.5 * (time[0] + time[-1])
+    maximum_period = 1200.0
+    scene_count = 3
+    seed = 61
+    conditions, elements = BENCHMARK._training_data_state(
+        time, reference_time, maximum_period, scene_count, seed, feature_mode="residual"
+    )
+    random = np.random.default_rng(seed)
+    expected_contexts = []
+    for _ in range(scene_count):
+        planet_count = int(random.integers(1, BENCHMARK.MAXIMUM_PLANETS + 1))
+        scene_elements = random.uniform(size=(planet_count, 5))
+        random.normal(0.0, np.full(time.size, BENCHMARK.MEASUREMENT_UNCERTAINTY))
+        expected_contexts.extend(
+            BENCHMARK._catalog_state_summary(np.delete(scene_elements, target_index, axis=0))
+            for target_index in range(planet_count)
+        )
+
+    np.testing.assert_allclose(conditions[:, -11:], expected_contexts)
+    np.testing.assert_allclose(elements.shape, (conditions.shape[0], 5))
+
+
 def test_count_ess_rejects_masked_and_nonfinite_values():
     masked = np.ma.array([0.0, 1.0, 2.0], mask=[False, True, False])
     with pytest.raises(ValueError, match="masked"):
@@ -767,3 +825,42 @@ def test_paired_efficiency_plot_handles_undefined_ratios(monkeypatch, tmp_path):
     assert image.shape[0] > 100 and image.shape[1] > 100
     assert np.ptp(image[..., :3]) > 0
     assert set(plt.get_fignums()) == before
+
+
+def test_paired_efficiency_plot_labels_state_conditioning(monkeypatch, tmp_path):
+    from matplotlib import pyplot as plt
+
+    runs = []
+    for method in ("prior", "data-informed", "neural"):
+        runs.append({
+            "validation_seed": 63,
+            "method": method,
+            "proposal_conditioning": "state" if method == "neural" else None,
+            "seed": 20053,
+            "count_samples": [0, 1, 2, 1],
+            "count_ess": 2.0,
+            "likelihood_samples": [-3.0, -2.0, -1.0, -2.0],
+            "likelihood_ess": 2.0,
+            "likelihood_calls": 10,
+            "elapsed_seconds": 1.0,
+            "count_probability": [0.25, 0.5, 0.25, 0.0],
+            "birth_acceptance": 0.1,
+            "death_acceptance": 0.2,
+        })
+    original_subplots = plt.subplots
+    figures = []
+
+    def capture_figure(*args, **kwargs):
+        figure, axes = original_subplots(*args, **kwargs)
+        figures.append(figure)
+        return figure, axes
+
+    monkeypatch.setattr(plt, "subplots", capture_figure)
+    monkeypatch.setattr(BENCHMARK, "VISUALS_PATH", tmp_path)
+
+    path = BENCHMARK._plot_results(runs, "state_mode")
+
+    assert path.is_file()
+    assert figures[0]._suptitle.get_text() == "State-conditioned, catalog summary neural proposal comparison"
+    assert figures[0].axes[0].get_title() == "Count ESS/call\nvs prior"
+    assert not plt.get_fignums()

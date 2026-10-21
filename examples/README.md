@@ -197,6 +197,21 @@ The run stores its conditioning mode, training dimensions, seeds, environment,
 and per-chain traces in the result JSON. Do not interpret the smoke run as an
 efficiency estimate.
 
+One completed three-scene, 12,000-sweep-per-chain state-conditioned run gave
+count ESS per likelihood call ratios of 0.029 versus prior (95% scene-bootstrap
+interval 0.029 to 0.60) and 1.20 versus data-informed (0.11 to 1.53). Median
+count-posterior total variation was 0.44 and 0.57 against those baselines. The
+neural log-likelihood R-hat values were 1.35, 1.00, and 2.32, with two scenes
+above 1.1. The pre-specified efficiency check failed. This result is specific
+to the current training setup and is not a general limit on state-conditioned
+proposals.
+
+The experimental ``--state-feature-mode residual`` option recomputes the
+periodogram after subtracting the current catalog model. A one-scene smoke run
+checks execution only; performance remains untested for this feature mode.
+
+![State-conditioned neural benchmark on three held-out scenes](neural_proposal_efficiency/visuals/state_conditioned_3scene_12k_20261018_v1_efficiency.png)
+
 I report zero ESS for constant count traces as a conservative convention,
 including traces shorter than four samples. Missing, masked, or nonfinite
 samples raise an error instead of producing an efficiency score. This

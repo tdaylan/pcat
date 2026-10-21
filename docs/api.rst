@@ -4,9 +4,9 @@ Public API
 Sampling
 --------
 
-New integrations should use ``pcat.sampling``. The implementation currently
-remains in ``pcat.main`` for backward compatibility while the sampler engine is
-decomposed into smaller modules.
+PCAT exposes its sampling interfaces in ``pcat.sampling``. These functions
+support transdimensional catalog inference, fixed-dimensional fits, and
+multiple-chain runs.
 
 .. py:function:: pcat.sampling.sample(**configuration)
 

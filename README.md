@@ -115,11 +115,10 @@ parameterization, even though both models encode the same physical value.
 
 ## Package organization
 
-PCAT is the sole posterior sampler in this software ecosystem. New sampling integrations should use `pcat.sampling` for the public entry
-points. `pcat.main` remains the implementation and backward-compatible access
-path while its tightly coupled engine is decomposed. Fixed-dimensional
-inference, diagnostics, plotting, catalog association, paths, and PSF utilities
-live in their respective modules under `pcat/`.
+PCAT's public sampling APIs live in `pcat.sampling`. `pcat.main` remains
+available for backward compatibility. Fixed-dimensional inference, diagnostics,
+plotting, catalog association, paths, and PSF utilities have dedicated modules
+under `pcat/`.
 
 ### Deterministic image formation
 
@@ -195,9 +194,8 @@ object is the persisted ``gdatfinlpost`` state.
 
 ## Proposal types and mixing moves
 
-PCAT is the only sampler in this software ecosystem. The
-``pcat.fixed.sample_posterior`` interface is useful for quick fixed-dimensional
-fits with a likelihood ``retr_llik(para, gdat)``. It returns a dictionary of
+For quick fixed-dimensional fits, ``pcat.fixed.sample_posterior`` accepts a
+likelihood with signature ``retr_llik(para, gdat)`` and returns a dictionary of
 posterior samples keyed by parameter name, optionally with derived variables,
 trace plots, and a saved posterior summary. It runs several independent PCAT
 chains and discards their burn-in.
@@ -305,6 +303,21 @@ agreement, with total-variation distances 0.32 from the prior and 0.75 from the
 data-informed baseline. It checks benchmark execution only, not performance.
 For a multi-scene comparison, use a fresh run ID and pass
 ``--proposal-conditioning state`` to the benchmark script.
+To test the residual-conditioned variant, add
+``--state-feature-mode residual``. It computes the periodogram from the
+velocity residual after subtracting the current catalog model. The one-scene
+smoke run for this variant checks execution only.
+
+In a completed three-scene run with 12,000 sweeps per chain, state-conditioned
+count ESS per likelihood call was 0.029 times the prior value (95% scene-
+bootstrap interval 0.029 to 0.60) and 1.20 times the data-informed value (0.11
+to 1.53). Median count-posterior total variation was 0.44 from prior and 0.57
+from data-informed. The count ESS per call versus prior and the count-posterior
+agreement both failed the pre-specified criteria. Log-likelihood R-hat was
+1.35, 1.00, and 2.32 across the three scenes, exceeding 1.1 in two scenes.
+The gain check failed against both baselines. This is evidence against a gain
+for this training setup, not a broad conclusion about state-conditioned
+proposals.
 
 When building an RV configuration with ``retr_dictpcatrvel``, set
 ``boolmakepropelem=False`` before adding state callbacks. The helper otherwise
@@ -554,7 +567,7 @@ export PCAT_PATH=/path/to/pcat
 
 `PCAT_PATH` identifies the Git repository root. Its `data/` and `visuals/` directories are ignored by Git. PCAT stores run inputs and outputs under `data/pcat_runs/` and run figures under `data/pcat_runs/<run>/visuals/`.
 
-The package declares `tdpy` and `chalcedon` as shared runtime dependencies. For local development against this workspace, install both libraries from source before PCAT:
+The package declares `tdpy` and `chalcedon` as runtime dependencies. To develop against local source checkouts, install both libraries before PCAT:
 
 ```bash
 cd /path/to/tdpy

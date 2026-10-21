@@ -117,13 +117,33 @@ def _catalog_state_summary(unit_elements):
 
 
 def _state_condition_features(gdat, context):
-    """Append a permutation-invariant live-catalog summary to observation features."""
-    observation_features = np.asarray(gdat.neural_proposal_features, dtype=float)
+    """Build data-only or leave-one-out residual features for the live catalog."""
+    feature_mode = getattr(gdat, "neural_state_feature_mode", "catalog")
+    if feature_mode == "catalog":
+        observation_features = np.asarray(gdat.neural_proposal_features, dtype=float)
+    elif feature_mode == "residual":
+        maximum_period = float(gdat.neural_maximum_period)
+        planets = _draw_planets(context.unit_elements, maximum_period)
+        residual = np.asarray(gdat.rvelobsv, dtype=float) - _render_planets(
+            np.asarray(gdat.timervel, dtype=float), planets, float(gdat.timervelrefr)
+        )
+        observation_features = _condition_feature(
+            np.asarray(gdat.timervel, dtype=float),
+            residual,
+            float(gdat.timervelrefr),
+            maximum_period,
+        )
+    else:
+        raise ValueError("neural_state_feature_mode must be 'catalog' or 'residual'.")
     return np.concatenate((observation_features, _catalog_state_summary(context.unit_elements)))
 
 
-def _training_data_state(time_observed, reference_time, maximum_period, scene_count, seed):
-    """Build conditional training pairs with each target element excluded from its catalog context."""
+def _training_data_state(
+    time_observed, reference_time, maximum_period, scene_count, seed, feature_mode="catalog"
+):
+    """Build catalog- or residual-conditioned training pairs with each target omitted."""
+    if feature_mode not in {"catalog", "residual"}:
+        raise ValueError("feature_mode must be 'catalog' or 'residual'.")
     random = np.random.default_rng(seed)
     conditions = []
     elements = []
@@ -135,15 +155,28 @@ def _training_data_state(time_observed, reference_time, maximum_period, scene_co
             time_observed, _draw_planets(scene_elements, maximum_period), reference_time
         )
         velocity += random.normal(0.0, standard_deviation)
-        observation_features = _condition_feature(
-            time_observed, velocity, reference_time, maximum_period
-        )
+        observation_features = None
+        if feature_mode == "catalog":
+            observation_features = _condition_feature(
+                time_observed, velocity, reference_time, maximum_period
+            )
         for target_index, target_element in enumerate(scene_elements):
             other_elements = np.delete(scene_elements, target_index, axis=0)
-            include_context = random.random(other_elements.shape[0]) < 0.5
-            context_elements = other_elements[include_context]
+            if feature_mode == "catalog":
+                include_context = random.random(other_elements.shape[0]) < 0.5
+                context_elements = other_elements[include_context]
+                condition_features = observation_features
+            else:
+                context_elements = other_elements
+                context_planets = _draw_planets(context_elements, maximum_period)
+                residual = velocity - _render_planets(
+                    time_observed, context_planets, reference_time
+                )
+                condition_features = _condition_feature(
+                    time_observed, residual, reference_time, maximum_period
+                )
             conditions.append(np.concatenate((
-                observation_features, _catalog_state_summary(context_elements)
+                condition_features, _catalog_state_summary(context_elements)
             )))
             elements.append(target_element)
     return np.asarray(conditions), np.asarray(elements)
@@ -250,7 +283,7 @@ def _read_posterior_traces(path):
 
 def _run_sampler(
     method, run_id, time_observed, velocity, stdv, features, proposal, sweeps, seed,
-    proposal_conditioning="data",
+    proposal_conditioning="data", state_feature_mode="catalog",
 ):
     global ACTIVE_LIKELIHOOD_CALLS
     setup_start = time.perf_counter()
@@ -302,6 +335,8 @@ def _run_sampler(
     if method == "neural":
         configuration["neural_proposal_features"] = features
         if proposal_conditioning == "state":
+            configuration["neural_state_feature_mode"] = state_feature_mode
+            configuration["neural_maximum_period"] = 2.0 * (time_observed[-1] - time_observed[0])
             configuration.update(proposal.state_callbacks(_state_condition_features))
         else:
             configuration.update(proposal.callbacks())
@@ -318,6 +353,7 @@ def _run_sampler(
     return {
         "method": method,
         "proposal_conditioning": proposal_conditioning if method == "neural" else None,
+        "state_feature_mode": state_feature_mode if method == "neural" and proposal_conditioning == "state" else None,
         "seed": int(seed),
         "count_samples": counts.tolist(),
         "likelihood_samples": likelihood.tolist(),
@@ -603,24 +639,43 @@ def _json_safe(value):
 
 def _plot_results(results, run_id):
     paired = _paired_summary(results)
+    neural_result = next(
+        (result.get("proposal_conditioning") for result in results if result["method"] == "neural"),
+        None,
+    )
+    proposal_conditioning = neural_result or "data"
+    state_feature_mode = (
+        next(
+            (result.get("state_feature_mode") or "catalog"
+             for result in results if result["method"] == "neural"),
+            "catalog",
+        )
+        if proposal_conditioning == "state" else None
+    )
+    neural_label = (
+        f"State-conditioned, {state_feature_mode} summary"
+        if proposal_conditioning == "state" else "Data-only"
+    )
     figure, axes = plt.subplots(2, 3, figsize=(10.0, 5.4))
+    figure.suptitle(f"{neural_label} neural proposal comparison")
     axes = axes.ravel()
     for axis, key, label in (
-        (axes[0], "neural_to_prior_ess_per_call_ratio", "Neural / prior ESS per call"),
-        (axes[1], "neural_to_data_informed_ess_per_call_ratio", "Neural / data-informed ESS per call"),
-        (axes[2], "neural_to_prior_likelihood_ess_per_call_ratio", "Neural / prior log-likelihood ESS per call"),
-        (axes[3], "neural_to_data_informed_likelihood_ess_per_call_ratio", "Neural / data-informed log-likelihood ESS per call"),
-        (axes[4], "neural_prior_count_posterior_total_variation", "Neural/prior count-posterior TV"),
-        (axes[5], "neural_data_informed_count_posterior_total_variation", "Neural/data-informed count-posterior TV"),
+        (axes[0], "neural_to_prior_ess_per_call_ratio", "Count ESS/call\nvs prior"),
+        (axes[1], "neural_to_data_informed_ess_per_call_ratio", "Count ESS/call\nvs data-informed"),
+        (axes[2], "neural_to_prior_likelihood_ess_per_call_ratio", "Log-likelihood ESS/call\nvs prior"),
+        (axes[3], "neural_to_data_informed_likelihood_ess_per_call_ratio", "Log-likelihood ESS/call\nvs data-informed"),
+        (axes[4], "neural_prior_count_posterior_total_variation", "Count posterior TV\nvs prior"),
+        (axes[5], "neural_data_informed_count_posterior_total_variation", "Count posterior TV\nvs data-informed"),
     ):
         values = [item[key] for item in paired]
         axis.axhline(1.0 if "ratio" in key else 0.0, color="0.45", lw=0.8, ls="--")
         axis.scatter(np.arange(len(values)), values, color="#087F8C", s=28, zorder=3)
         axis.set_xticks(np.arange(len(values)), [str(item["validation_seed"]) for item in paired])
-        axis.set_xlabel("Validation seed")
-        axis.set_ylabel(label)
+        axis.set_xlabel("Scene seed")
+        axis.set_ylabel("")
+        axis.set_title(label, fontsize=9)
         axis.grid(False)
-    figure.tight_layout()
+    figure.tight_layout(rect=(0.0, 0.0, 1.0, 0.92))
     path = VISUALS_PATH / f"{run_id}_efficiency.png"
     VISUALS_PATH.mkdir(parents=True, exist_ok=True)
     print(f"Writing to {path}...")
@@ -632,8 +687,13 @@ def _plot_results(results, run_id):
 def run_benchmark(arguments):
     methods = ("prior", "data-informed", "neural")
     proposal_conditioning = getattr(arguments, "proposal_conditioning", "data")
+    state_feature_mode = getattr(arguments, "state_feature_mode", "catalog")
     if proposal_conditioning not in {"data", "state"}:
         raise ValueError("proposal_conditioning must be 'data' or 'state'.")
+    if state_feature_mode not in {"catalog", "residual"}:
+        raise ValueError("state_feature_mode must be 'catalog' or 'residual'.")
+    if proposal_conditioning == "data" and state_feature_mode != "catalog":
+        raise ValueError("state_feature_mode applies only when proposal_conditioning='state'.")
     artifacts = [
         RUNS_PATH / f"{arguments.run_id}_proposal.pt",
         RUNS_PATH / f"{arguments.run_id}_results.json",
@@ -654,10 +714,17 @@ def run_benchmark(arguments):
     maximum_period = 2.0 * (time_observed[-1] - time_observed[0])  # [day]
     training_start = time.perf_counter()
     training_function = _training_data_state if proposal_conditioning == "state" else _training_data
-    training_conditions, training_elements = training_function(
-        time_observed, reference_time, maximum_period,
-        arguments.training_scenes, arguments.seed + 1000,
-    )
+    if proposal_conditioning == "state":
+        training_conditions, training_elements = training_function(
+            time_observed, reference_time, maximum_period,
+            arguments.training_scenes, arguments.seed + 1000,
+            feature_mode=state_feature_mode,
+        )
+    else:
+        training_conditions, training_elements = training_function(
+            time_observed, reference_time, maximum_period,
+            arguments.training_scenes, arguments.seed + 1000,
+        )
     proposal = NeuralElementProposal.fit(
         training_conditions,
         training_elements,
@@ -699,6 +766,7 @@ def run_benchmark(arguments):
                     arguments.sweeps,
                     chain_seed,
                     proposal_conditioning=proposal_conditioning,
+                    state_feature_mode=state_feature_mode,
                 )
                 result["validation_seed"] = validation_seed
                 result["chain_index"] = chain_index
@@ -732,6 +800,7 @@ def run_benchmark(arguments):
         "training_scenes": arguments.training_scenes,
         "training_elements": int(training_elements.shape[0]),
         "proposal_conditioning": proposal_conditioning,
+        "state_feature_mode": state_feature_mode if proposal_conditioning == "state" else None,
         "training_condition_dimension": int(training_conditions.shape[1]),
         "training_seconds": float(training_seconds),
         "final_training_negative_log_density": float(proposal.loss_history[-1]),
@@ -898,6 +967,12 @@ def main():
         choices=("data", "state"),
         default="data",
         help="Condition the neural proposal on observation features alone or also on the live catalog.",
+    )
+    parser.add_argument(
+        "--state-feature-mode",
+        choices=("catalog", "residual"),
+        default="catalog",
+        help="Use catalog summaries alone or periodogram features of the leave-one-out residual.",
     )
     parser.add_argument("--smoke", action="store_true", help="Use a small run to check the pipeline.")
     parser.add_argument("--typeplotback", choices=("white", "dark"), default="white")
