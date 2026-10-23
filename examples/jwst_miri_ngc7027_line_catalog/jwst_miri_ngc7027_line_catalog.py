@@ -15,6 +15,7 @@ sigma_eff includes a fractional floor for calibration and fringe residuals.
 from tdpy.verbosity import print
 
 import argparse
+from datetime import datetime, timezone
 from tdpy.cli import add_plot_arguments
 import shutil
 from pathlib import Path
@@ -163,6 +164,7 @@ def render_line_histogram_frames(posterior):
     upper = max(1, *(int(histogram.max()) for _, histogram in histograms)) * 1.15
     visual_root = EXAMPLE_PATH / "visuals"
     visual_root.mkdir(parents=True, exist_ok=True)
+    run_tag = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     paths = []
     for index, histogram in histograms:
         figure, axis = plt.subplots(figsize=(6.0, 4.3), facecolor="white")
@@ -174,7 +176,7 @@ def render_line_histogram_frames(posterior):
                  ylabel="Number of spectral lines", title="JWST/MIRI NGC 7027 line catalog")
         axis.grid(False)
         axis.legend(loc="upper right", framealpha=1, facecolor="white", fontsize=8)
-        path = visual_root / f"jwst_line_hist_swep{index:09d}.png"
+        path = visual_root / f"jwst_line_hist_{run_tag}_swep{index:09d}.png"
         print(f"Writing to {path}...")
         figure.savefig(path, dpi=200, bbox_inches="tight", facecolor="white")
         plt.close(figure)

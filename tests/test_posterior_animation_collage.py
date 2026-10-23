@@ -76,7 +76,7 @@ def test_collage_places_spectral_fit_logo_and_variable_starspots_in_requested_pa
     assert "Daylan+2017 NG cap mock" in panels[1].label
     assert "Fermi-LAT point sources" in panels[1].label
     assert "JWST/MIRI NGC 7027" in panels[2].label
-    assert panels[2].pattern == "jwst_miri_ngc7027_line_catalog/visuals/jwst_line_hist_swep*.png"
+    assert panels[2].pattern == "jwst_miri_ngc7027_line_catalog/visuals/jwst_line_hist_*_swep*.png"
     assert "variable-count rotating starspots" in panels[3].label
     assert panels[4].static_image == "docs/_static/pcat_logo.png"
     assert panels[4].pattern is None
@@ -116,6 +116,12 @@ def test_miri_posterior_line_histogram_uses_blue_model(tmp_path, monkeypatch):
     assert len(paths) == 2
     assert colors == ["#176B87", "#176B87"]
     assert all(path.is_file() for path in paths)
+
+    second_paths = example["render_line_histogram_frames"](posterior)
+
+    assert len(second_paths) == 2
+    assert set(paths).isdisjoint(second_paths)
+    assert all(path.is_file() for path in paths + second_paths)
 
 
 def test_animation_frames_use_one_shared_palette():

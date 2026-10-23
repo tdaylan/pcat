@@ -471,7 +471,7 @@ POSTERIOR_ANIMATION_PANELS = (
     ),
     PosteriorAnimationPanel(
         "JWST/MIRI NGC 7027 | observed spectral fit",
-        "jwst_miri_ngc7027_line_catalog/visuals/jwst_line_hist_swep*.png",
+        "jwst_miri_ngc7027_line_catalog/visuals/jwst_line_hist_*_swep*.png",
     ),
     PosteriorAnimationPanel(
         "Stellar light curve | variable-count rotating starspots",
