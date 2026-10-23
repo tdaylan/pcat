@@ -6,6 +6,7 @@ import pytest
 from pcat.diagnostics import posterior_convergence
 from pcat.fixed import sample_allesfitter_pcat, sample_fixed_chains
 from pcat.main import readfile, sample
+from pcat.main import readfile, retr_levipost, sample
 from pcat.time_series import (
     log_likelihood_transit_times,
     make_transit_time_likelihood,
@@ -47,6 +48,23 @@ def test_transit_time_likelihood_factory_uses_forward_predictor():
 
     assert actual == expected
     assert predictor_calls[0] == predictor_calls[1] == tuple(parameters)
+
+
+def test_retr_levipost_matches_harmonic_mean_for_unequal_likelihoods():
+    assert retr_levipost(np.log([1.0, 3.0])) == pytest.approx(np.log(1.5))
+
+
+def test_retr_levipost_remains_stable_for_extreme_log_likelihoods():
+    with np.errstate(all="raise"):
+        actual = retr_levipost([-1000.0, -1001.0])
+    expected = -1001.0 + np.log(2.0 / (1.0 + np.exp(-1.0)))
+    assert actual == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("samples", [[], [np.nan], [np.inf], [-np.inf]])
+def test_retr_levipost_rejects_empty_or_nonfinite_samples(samples):
+    with pytest.raises(ValueError, match="must not be empty|must be finite"):
+        retr_levipost(samples)
 
 
 def gaussian_log_likelihood(gdat, strgmodl, values):

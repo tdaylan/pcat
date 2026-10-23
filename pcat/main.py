@@ -7825,11 +7825,19 @@ def retr_colr(gdat, strgstat, strgmodl, indxpopl=None):
 
 
 def retr_levipost(listllik):
-    
-    minmlistllik = np.amin(listllik)
-    levipost = np.log(np.mean(1. / np.exp(listllik - minmlistllik))) + minmlistllik
-    
-    return levipost
+    """Estimate log evidence with the harmonic mean of posterior likelihoods.
+
+    The estimate is sensitive to posterior-tail coverage and does not by itself
+    establish that the evidence is accurate.
+    """
+
+    log_likelihoods = np.asarray(listllik, dtype=float)
+    if log_likelihoods.size == 0:
+        raise ValueError("Posterior log-likelihood samples must not be empty")
+    if not np.isfinite(log_likelihoods).all():
+        raise ValueError("Posterior log-likelihood samples must be finite")
+    with np.errstate(under="ignore"):
+        return float(-logsumexp(-log_likelihoods) + np.log(log_likelihoods.size))
 
 
 def retr_infofromlevi(pmeallik, levi):
