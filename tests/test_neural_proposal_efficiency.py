@@ -830,6 +830,7 @@ def test_paired_efficiency_plot_handles_undefined_ratios(monkeypatch, tmp_path):
 def test_paired_efficiency_plot_labels_state_conditioning(monkeypatch, tmp_path):
     from matplotlib import pyplot as plt
 
+    figures_before = set(plt.get_fignums())
     runs = []
     for method in ("prior", "data-informed", "neural"):
         runs.append({
@@ -863,4 +864,4 @@ def test_paired_efficiency_plot_labels_state_conditioning(monkeypatch, tmp_path)
     assert path.is_file()
     assert figures[0]._suptitle.get_text() == "State-conditioned, catalog summary neural proposal comparison"
     assert figures[0].axes[0].get_title() == "Count ESS/call\nvs prior"
-    assert not plt.get_fignums()
+    assert set(plt.get_fignums()) == figures_before
