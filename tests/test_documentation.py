@@ -779,8 +779,8 @@ def test_readme_lists_daylan_applications_first_without_reproduction_language():
     headings = [line for line in applications.splitlines() if line.startswith("### ")]
 
     assert headings[:2] == [
-        "### [Daylan et al. (2017): Unresolved Fermi-LAT sources](examples/daylan+2017_fermi_point_sources/)",
-        "### [Daylan et al. (2018): Strong-lens subhalos](examples/daylan+2018_strong_lens_subhalos/)",
+        "### [Daylan et al. (2017) Unresolved Fermi-LAT sources](examples/daylan+2017_fermi_point_sources/)",
+        "### [Daylan et al. (2018) Strong-lens subhalos](examples/daylan+2018_strong_lens_subhalos/)",
     ]
     assert "reproduc" not in applications.lower()
 

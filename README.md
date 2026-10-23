@@ -156,6 +156,8 @@ shared parameters that remain in every candidate. For example, a source-catalog
 metamodel can vary the number of sources while also sampling background
 normalizations and population hyperparameters. Catalog inference is one
 transdimensional application of this more general approach.
+Each model fixes its parameter dimension. A metamodel combines candidate models
+with different dimensions.
 
 ## Custom likelihoods
 
@@ -194,7 +196,7 @@ object is the persisted ``gdatfinlpost`` state.
 
 ## Proposal types and mixing moves
 
-For quick fixed-dimensional fits, ``pcat.fixed.sample_posterior`` accepts a
+For quick inference within one model, ``pcat.fixed.sample_posterior`` accepts a
 likelihood with signature ``retr_llik(para, gdat)`` and returns a dictionary of
 posterior samples keyed by parameter name, optionally with derived variables,
 trace plots, and a saved posterior summary. It runs several independent PCAT
@@ -426,7 +428,7 @@ These values describe short controlled simulations, not universal rankings.
 
 `typeopti="hess"` is an experimental finite-difference Hessian initializer for
 proposal scales. It is not gradient descent and does not optimize the starting
-state. PCAT currently has no gradient-descent burn-in mode.
+state. PCAT currently has no gradient descent burn-in mode.
 
 ### Comparing samplers
 
@@ -435,8 +437,8 @@ compares all three on the same sinusoidal model with one parameter dimension,
 using posterior agreement, mode recovery, effective samples per second,
 likelihood calls, and evidence. A second experiment compares variable planet
 counts from zero to three. PCAT samples all counts in one run, while dynesty
-needs a separate evidence run per count. Emcee requires one parameter dimension
-per chain and cannot make that comparison. The example reports count-posterior
+needs a separate evidence run per count. In this comparison, emcee requires one
+parameter dimension per chain and cannot make that comparison. The example reports count-posterior
 agreement, period recovery, likelihood evaluations, and wall time. These seeded
 simulations show different capabilities and costs rather than a universal
 sampler ranking.
@@ -459,9 +461,9 @@ python examples/sampler_comparison_emcee_dynesty/sampler_comparison_emcee_dynest
 
 ## Applications
 
-### [Unresolved Fermi-LAT sources (Daylan et al., 2017)](examples/daylan+2017_fermi_point_sources/)
+### [Daylan et al. (2017) Unresolved Fermi-LAT sources](examples/daylan+2017_fermi_point_sources/)
 
-### [Strong-lens subhalos (Daylan et al., 2018)](examples/daylan+2018_strong_lens_subhalos/)
+### [Daylan et al. (2018) Strong-lens subhalos](examples/daylan+2018_strong_lens_subhalos/)
 
 ### [Keplerian signals in radial-velocity data](examples/variable_number_exoplanets_radial_velocity/variable_number_exoplanets_radial_velocity.ipynb)
 

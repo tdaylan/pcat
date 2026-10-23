@@ -59,10 +59,10 @@ point-spread functions, and instrument-specific response settings.
 User-supplied likelihoods
 -------------------------
 
-``typeexpr="gener"`` runs a fixed-dimensional model with an arbitrary
-user-supplied log-likelihood function. The callback receives the run state, the
-model name, and the current parameter values, and returns one scalar log
-likelihood:
+``typeexpr="gener"`` runs inference within one parameterized model using an
+arbitrary user-supplied log-likelihood function. The callback receives the run
+state, the model name, and the current parameter values, and returns one scalar
+log likelihood:
 
 .. code-block:: python
 

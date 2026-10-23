@@ -5,13 +5,13 @@ Sampling
 --------
 
 PCAT exposes its sampling interfaces in ``pcat.sampling``. These functions
-support transdimensional catalog inference, fixed-dimensional fits, and
+support inference within one model, transdimensional catalog inference, and
 multiple-chain runs.
 
 .. py:function:: pcat.sampling.sample(**configuration)
 
-   Dispatch an image, catalog, or fixed-dimensional PCAT configuration, execute
-   sampling and final processing, and return the final global state object.
+   Dispatch an image, catalog, or arbitrary-likelihood PCAT configuration,
+   execute sampling and final processing, and return the final global state object.
 
    Frequently used configuration keys include:
 

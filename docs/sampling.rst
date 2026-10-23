@@ -1,9 +1,9 @@
 Sampling, proposals, and convergence
 ====================================
 
-PCAT uses one Metropolis-Hastings sampler for fixed-dimensional models and
-transdimensional catalogs. A sweep selects a proposal, evaluates its candidate
-state, and accepts or rejects that candidate. The realized proposal type,
+PCAT uses one Metropolis-Hastings sampler for inference within one model or over
+a metamodel. A sweep selects a proposal, evaluates its candidate state, and
+accepts or rejects that candidate. The realized proposal type,
 acceptance probability, and accept/reject result are recorded for every sweep.
 
 Proposal types
@@ -18,7 +18,8 @@ Proposal types
      - Main settings
    * - Within-model
      - Updates existing parameters without changing the number of elements.
-       It is the only proposal used by default for fixed-dimensional models.
+      It is the only proposal used by default when inference stays within one
+      model.
      - ``stdvpropbase`` and ``stdvpropelemfire`` set unit-coordinate step
        scales. ``booladaptstdp=True`` adapts these scales during burn-in.
        ``probdemc`` mixes in differential-evolution steps and ``probstud``
@@ -279,7 +280,8 @@ both are available, with boundary restrictions taking precedence.
 ``probjump`` defaults to ``0.1`` when a variable population is present, so
 catalog runs propose within-model, birth, death, split, merge, and jump moves
 by default. ``probdemc`` and ``probstud`` default to zero and must be enabled
-explicitly. Their sum must not exceed one. ``probstud`` mixes in independent,
+explicitly. Both probabilities default to zero, and their sum must not exceed one.
+``probstud`` mixes in independent,
 variance-matched Student-t(5) increments for the currently selected
 within-model parameters. The heavy tails can help traverse separated modes but
 can reduce efficiency on a locally Gaussian target. In a seeded 8,000-sweep
@@ -346,8 +348,7 @@ local effective sample size and does not guarantee discovery of every mode.
 
 ``typeopti="hess"`` estimates local finite-difference curvature to initialize
 proposal scales. It does not take gradient steps or optimize the initial state.
-PCAT currently offers no gradient-descent burn-in mode.
-gradient-descent burn-in mode.
+PCAT currently offers no gradient descent burn-in mode.
 
 The :doc:`examples` page links ``burn_in_strategies``, which compares fixed,
 adaptive, tempered plus adaptive burn-in, and adaptive Student-t within-model

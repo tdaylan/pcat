@@ -119,7 +119,7 @@ PCAT can sample an unbinned likelihood through a user callback. The maintained
 directly to ``pcat.fixed.sample_fixed_chains`` and sums their Gaussian-mixture
 log densities with no spatial bins or count map. It samples the four center
 coordinates of two equal-weight Gaussian components. The component count and
-width are fixed, so this callback demonstrates a fixed-dimensional model.
+width are fixed, so this callback demonstrates inference within one model.
 
 The native ``typeexpr="gmix"`` experiment remains the binned Poisson workflow
 shown in ``gaussian_mixture_catalog``. Its variable-width ``clusvari`` elements
@@ -252,9 +252,9 @@ epochs. See ``transit_timing_variations`` for a posterior-sampling example.
 Generic user-supplied likelihood
 --------------------------------
 
-Use ``typeexpr="gener"`` for a fixed-dimensional custom likelihood. The
-``retr_llik(gdat, strgmodl, values)`` callback returns one log-likelihood value
-for the supplied parameter vector. PCAT handles configured priors, proposals,
+Use ``typeexpr="gener"`` for inference within one model with a custom
+likelihood. The ``retr_llik(gdat, strgmodl, values)`` callback returns one
+log-likelihood value for the supplied parameter vector. PCAT handles configured priors, proposals,
 accept/reject steps, persistence, and saved sample summaries. Use this path
 when none of the built-in binned likelihoods matches the data model. See
 :doc:`capabilities` for a complete callback example and :doc:`sampling` for
