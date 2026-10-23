@@ -38,8 +38,9 @@ target.
    :align: center
 
 The animation shows nine changing inference views, including unbinned mixtures,
-simulated gamma-ray point sources, Roman strong-lens arcs, observed JWST/MIRI
-line catalogs, radial velocities, transit timings, and stellar-flare photometry.
+simulated gamma-ray point sources, a Roman/WFI outer lensing arc and compact
+inner counterimage of one extended source, observed JWST/MIRI line catalogs,
+radial velocities, transit timings, and stellar-flare photometry.
 Time-series and histogram axes remain fixed across frames, and the GIF uses one
 shared color palette. Only the JWST/MIRI spectrum uses observed data.
 

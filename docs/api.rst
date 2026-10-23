@@ -5,8 +5,8 @@ Sampling
 --------
 
 PCAT exposes its sampling interfaces in ``pcat.sampling``. These functions
-support inference within one model, transdimensional catalog inference, and
-multiple-chain runs.
+support inference within one model, transdimensional inference over metamodels,
+and multiple-chain runs.
 
 .. py:function:: pcat.sampling.sample(**configuration)
 

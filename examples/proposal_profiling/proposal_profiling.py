@@ -12,7 +12,6 @@ summarizes both.
 from tdpy.verbosity import print
 
 import argparse
-import builtins
 from tdpy.cli import add_plot_arguments
 import shutil
 import sys
@@ -176,20 +175,20 @@ def main():
     plot_acceptance_and_cost(chain, arguments.typefileplot)
     plot_time_breakdown_by_phase(chain, arguments.typefileplot)
     timetotl = chain["time"].sum()
-    builtins.print(f"Recorded sweep time: {timetotl / 1e3:.2f} s across "
-                    f"{chain['time'].size} sweeps ({chain['time'].mean():.3f} ms/sweep, "
-                    f"{1e3 / chain['time'].mean():.0f} sweeps/s)")
+    print(f"Recorded sweep time: {timetotl / 1e3:.2f} s across "
+          f"{chain['time'].size} sweeps ({chain['time'].mean():.3f} ms/sweep, "
+          f"{1e3 / chain['time'].mean():.0f} sweeps/s)")
     if time_sampler is not None:
-        builtins.print(f"PCAT sampler wall time: {time_sampler:.2f} s")
-    builtins.print("Proposal             Sweeps  Acceptance  Median [ms]  Runtime share")
+        print(f"PCAT sampler wall time: {time_sampler:.2f} s")
+    print("Proposal             Sweeps  Acceptance  Median [ms]  Runtime share")
     for k, label in enumerate(LABELS):
         indx = chain["type"] == k
         if indx.any():
             timeprop = chain["time"][indx]
             fracruntime = timeprop.sum() / timetotl
-            builtins.print(f"{label:<20} {indx.sum():>6}  "
-                        f"{chain['accp'][indx].mean():>10.3f}  "
-                        f"{np.median(timeprop):>11.3f}  {fracruntime:>12.1%}")
+            print(f"{label:<20} {indx.sum():>6}  "
+                f"{chain['accp'][indx].mean():>10.3f}  "
+                f"{np.median(timeprop):>11.3f}  {fracruntime:>12.1%}")
 
 
 if __name__ == "__main__":

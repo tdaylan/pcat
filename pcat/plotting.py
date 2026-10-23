@@ -482,7 +482,7 @@ POSTERIOR_ANIMATION_PANELS = (
         static_image="docs/_static/pcat_logo.png",
     ),
     PosteriorAnimationPanel(
-        "Roman/WFI detector image | simulated strong-lens arcs",
+        "Roman/WFI detector image | strong-lens arc and compact counterimage",
         "roman_strong_lens_perturber_catalog/visuals/roman_wfi_lensed_posterior_swep*.png",
     ),
     PosteriorAnimationPanel(
@@ -495,7 +495,7 @@ POSTERIOR_ANIMATION_PANELS = (
     ),
     PosteriorAnimationPanel(
         "Simulated TTV | transit-time series",
-        "transit_timing_variations/visuals/ttv_posterior_*/ttv_posterior_swep*.png",
+        "transit_timing_variations/visuals/ttv_posterior_*_swep*.png",
     ),
 )
 

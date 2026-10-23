@@ -56,10 +56,12 @@ follow burn-in for the first third of the animation, and show posterior samples
 for the remaining two thirds. They show an unbinned Gaussian mixture of
 simulated events, Daylan+2017 northern Galactic cap Fermi-LAT point sources,
 the observed JWST/MIRI NGC 7027 spectral fit, a stellar light curve with a
-variable number of rotating starspots, Roman/WFI strong-lens arcs, stellar
-flares, radial velocities, and transit times. Time-series and spectral axes
-remain fixed across frames. The publication-inspired simulations illustrate
-PCAT's sampling behavior and do not reproduce published posterior values.
+variable number of rotating starspots, and the Roman/WFI lens's outer arc and
+compact inner counterimage, plus stellar flares, radial velocities, and transit
+times. The Roman source is one extended Gaussian; no independent point source is
+included. Time-series and spectral axes remain fixed across frames. The
+publication-inspired simulations illustrate PCAT's sampling behavior and do not
+reproduce published posterior values.
 
 ## Every proposed state
 

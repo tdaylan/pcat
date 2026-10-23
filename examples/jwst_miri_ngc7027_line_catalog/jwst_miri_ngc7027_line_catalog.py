@@ -166,7 +166,7 @@ def render_line_histogram_frames(posterior):
     paths = []
     for index, histogram in histograms:
         figure, axis = plt.subplots(figsize=(6.0, 4.3), facecolor="white")
-        axis.bar(edges[:-1], histogram, width=np.diff(edges), align="edge", color="#347F72",
+        axis.bar(edges[:-1], histogram, width=np.diff(edges), align="edge", color="#176B87",
                  edgecolor="white", linewidth=0.5, label="PCAT line centers")
         for label, wavelength in LINES_IDENTIFIED.items():
             axis.axvline(wavelength, color="#A83D36", lw=1.1, ls="--", label=label)

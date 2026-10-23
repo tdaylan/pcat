@@ -81,11 +81,41 @@ def test_collage_places_spectral_fit_logo_and_variable_starspots_in_requested_pa
     assert panels[4].static_image == "docs/_static/pcat_logo.png"
     assert panels[4].pattern is None
     assert "Roman/WFI detector image" in panels[5].label
-    assert "strong-lens arcs" in panels[5].label
+    assert "strong-lens arc and compact counterimage" in panels[5].label
     assert "PCAT flare catalog" in panels[6].label
     assert "variable-number exoplanets" in panels[7].label
     assert "transit-time series" in panels[8].label
+    assert panels[8].pattern == "transit_timing_variations/visuals/ttv_posterior_*_swep*.png"
     assert all("deflection" not in panel.label.lower() for panel in panels)
+
+
+def test_miri_posterior_line_histogram_uses_blue_model(tmp_path, monkeypatch):
+    from matplotlib import pyplot as plt
+    from types import SimpleNamespace
+
+    example = load_example_namespace(
+        "jwst_miri_ngc7027_line_catalog/jwst_miri_ngc7027_line_catalog.py"
+    )
+    example["EXAMPLE_PATH"] = tmp_path
+    colors = []
+    original_bar = plt.Axes.bar
+
+    def capture_bar(axis, *args, **kwargs):
+        colors.append(kwargs.get("color"))
+        return original_bar(axis, *args, **kwargs)
+
+    monkeypatch.setattr(plt.Axes, "bar", capture_bar)
+    wavenumber = 1e6 / np.array([5.34, 5.5112])
+    posterior = SimpleNamespace(listpostdictelem=[
+        [{"elin": wavenumber}],
+        [{"elin": wavenumber}],
+    ])
+
+    paths = example["render_line_histogram_frames"](posterior)
+
+    assert len(paths) == 2
+    assert colors == ["#176B87", "#176B87"]
+    assert all(path.is_file() for path in paths)
 
 
 def test_animation_frames_use_one_shared_palette():

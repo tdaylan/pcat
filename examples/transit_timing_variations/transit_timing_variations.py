@@ -61,7 +61,7 @@ def render_ttv_posterior_frames(data, snapshots, run_tag):
               for snapshot in snapshots]
     # data-based limits keep the axis fixed even when early burn-in models lie far off
     maximum_minutes = 1.6 * np.max(np.abs(measured_minutes) + errors * MINUTES_PER_DAY)  # [minute]
-    output = ROOT / "visuals" / f"ttv_posterior_{run_tag}"
+    output = ROOT / "visuals"
     output.mkdir(parents=True, exist_ok=True)
     paths = []
     for snapshot, curve in zip(snapshots, curves):
@@ -74,7 +74,7 @@ def render_ttv_posterior_frames(data, snapshots, run_tag):
                  title=animation_phase_label(snapshot))
         axis.grid(False)
         axis.legend(loc="upper right", framealpha=1, facecolor="white")
-        path = output / f"ttv_posterior_swep{snapshot['cntrswep']:09d}.png"
+        path = output / f"ttv_posterior_{run_tag}_swep{snapshot['cntrswep']:09d}.png"
         print(f"Writing to {path}...")
         figure.savefig(path, dpi=200, bbox_inches="tight", facecolor="white")
         plt.close(figure)
