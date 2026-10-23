@@ -382,16 +382,24 @@ Analysis utilities
       :align: center
 
 ``kl_divergence_gaussian``
-   PCAT samples a conjugate Gaussian posterior and estimates the forward KL
-   divergence to its Gaussian prior. The example compares the Monte Carlo
-   estimate and its autocorrelation-aware uncertainty with the analytic value.
+   PCAT samples a two-parameter conjugate Gaussian posterior. The same chains
+   estimate posterior-to-prior KL divergence and mutual information between
+   posterior parameters, using their normalized analytic densities. Each
+   estimate is compared with its exact Gaussian value. The example reports
+   autocorrelation-aware Monte Carlo standard errors rather than claiming
+   that agreement alone demonstrates convergence.
 
    .. code-block:: bash
 
-      python examples/kl_divergence_gaussian/kl_divergence_gaussian.py --smoke
+      python examples/kl_divergence_gaussian/kl_divergence_gaussian.py
 
-   .. image:: ../examples/kl_divergence_gaussian/visuals/kl_divergence_gaussian.png
-      :alt: PCAT posterior-to-prior KL estimate and the analytic Gaussian value
+   .. image:: _static/kl_divergence_gaussian.png
+      :alt: Sampled posterior-to-prior KL with Monte Carlo uncertainty and its exact Gaussian value
+      :width: 640px
+      :align: center
+
+   .. image:: _static/mutual_information_gaussian.png
+      :alt: Sampled posterior mutual information with Monte Carlo uncertainty and its exact Gaussian value
       :width: 640px
       :align: center
 
@@ -498,8 +506,8 @@ Analysis utilities
       :width: 640px
       :align: center
 
-Scientific interpretation
--------------------------
+Interpreting examples
+---------------------
 
 Generated examples are deterministic pipeline demonstrations unless their
 README explicitly states otherwise. Synthetic outputs validate computation and

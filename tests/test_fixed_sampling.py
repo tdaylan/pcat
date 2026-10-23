@@ -120,7 +120,8 @@ def test_fixed_chains_estimate_constant_likelihood_evidence(tmp_path):
     assert abs(evidence['log_evidence'] - np.log(3.)) < 4 * evidence['relative_error']
 
 
-def test_fixed_chains_preserve_worker_and_sweep_order(tmp_path, monkeypatch):
+@pytest.mark.parametrize('requested_count', [3, 8])
+def test_fixed_chains_preserve_worker_and_sweep_order(tmp_path, monkeypatch, requested_count):
     import types
     import pcat.fixed as fixed
 
@@ -134,15 +135,32 @@ def test_fixed_chains_preserve_worker_and_sweep_order(tmp_path, monkeypatch):
     chains, logprob = sample_fixed_chains(
         None, constant_legacy_likelihood, None, ('x',), ('self',),
         (0.,), (30.,), None, None, np.array([[0.]]),
-        2, 3, 0, pathbase=str(tmp_path),
+        2, requested_count, 0, pathbase=str(tmp_path),
     )
 
     np.testing.assert_array_equal(chains[:, :, 0], [[10., 11., 12.], [20., 21., 22.]])
     np.testing.assert_array_equal(logprob, [[100., 101., 102.], [200., 201., 202.]])
 
 
+def test_fixed_chains_reject_mismatched_completed_arrays(tmp_path, monkeypatch):
+    import types
+    import pcat.fixed as fixed
+
+    monkeypatch.setattr(fixed, 'sample_fixed', lambda **kwargs: types.SimpleNamespace(
+        listpostparagenrscalbase=np.zeros((3, 2, 1)),
+        listpostlpostotl=np.zeros((2, 2)),
+    ))
+    with pytest.raises(ValueError, match='same nonzero number of draws'):
+        sample_fixed_chains(
+            None, constant_legacy_likelihood, None, ('x',), ('self',),
+            (0.,), (30.,), None, None, np.array([[0.]]),
+            2, 8, 0, pathbase=str(tmp_path),
+        )
+
+
 @pytest.mark.parametrize('initial_value', [0.0, 1.0])
-def test_allesfitter_adapter_runs_native_pcat(tmp_path, monkeypatch, initial_value):
+@pytest.mark.parametrize('retained_count', [4, 8])
+def test_allesfitter_adapter_runs_native_pcat(tmp_path, monkeypatch, initial_value, retained_count):
     import sys
     import types
     import h5py
@@ -153,10 +171,11 @@ def test_allesfitter_adapter_runs_native_pcat(tmp_path, monkeypatch, initial_val
 
     def capture_acceptances(*args, **kwargs):
         chain, logprob, result = original_sample_fixed_chains(*args, **kwargs)
+        result.listpostboolpropaccp = np.asarray(result.listpostboolpropaccp)[:retained_count]
         recorded_acceptances['counts'] = np.asarray(
             result.listpostboolpropaccp, dtype=bool
         ).reshape(-1, 1).sum(axis=0)
-        return chain, logprob, result
+        return chain[:, :retained_count], logprob[:, :retained_count], result
 
     monkeypatch.setattr(fixed, 'sample_fixed_chains', capture_acceptances)
 
@@ -177,7 +196,8 @@ def test_allesfitter_adapter_runs_native_pcat(tmp_path, monkeypatch, initial_val
     path = sample_allesfitter_pcat(str(tmp_path))
     print('Reading from %s...' % path)
     with h5py.File(path, 'r') as saved:
-        assert saved['mcmc/chain'].shape == (8, 1, 1)
+        assert saved['mcmc/chain'].shape == (retained_count, 1, 1)
+        assert saved['mcmc'].attrs['iteration'] == retained_count
         assert np.all(np.isfinite(saved['mcmc/log_prob'][:]))
         np.testing.assert_array_equal(saved['mcmc/accepted'][:], recorded_acceptances['counts'])
 

@@ -137,6 +137,16 @@ def autocorrelation_time(samples, typeverb=0, atcrtype='maxm', verbtype=None):
     return correlations.reshape(parameter_shape + (lag_count,)), times.reshape(parameter_shape)
 
 
+def _evaluate_log_density(callback, samples):
+    values = callback(samples)
+    if np.ma.is_masked(values) or np.iscomplexobj(values):
+        raise ValueError("log-density callbacks must return unmasked real values")
+    values = np.asarray(values, dtype=float)
+    if values.shape != (samples.shape[0],):
+        raise ValueError("log-density callbacks must return one value per draw")
+    return values
+
+
 def estimate_kl_divergence(samples, log_density_p, log_density_q):
     """Estimate forward ``D_KL(P || Q)`` from normalized log densities and draws from P.
 
@@ -147,6 +157,8 @@ def estimate_kl_divergence(samples, log_density_p, log_density_q):
     autocorrelation and variation between independent chains. Finite-sample
     estimates are not clipped at zero.
     """
+    if np.ma.is_masked(samples) or np.iscomplexobj(samples):
+        raise ValueError("samples must contain unmasked real values")
     values = np.asarray(samples, dtype=float)
     if values.ndim == 2:
         chains = values[None, :, :]
@@ -159,11 +171,8 @@ def estimate_kl_divergence(samples, log_density_p, log_density_q):
 
     chain_count, draw_count, parameter_count = chains.shape
     flat_samples = chains.reshape(-1, parameter_count)
-    logprobp = np.asarray(log_density_p(flat_samples), dtype=float)
-    logprobq = np.asarray(log_density_q(flat_samples), dtype=float)
-    expected_shape = (chain_count * draw_count,)
-    if logprobp.shape != expected_shape or logprobq.shape != expected_shape:
-        raise ValueError("log-density callbacks must return one value per draw")
+    logprobp = _evaluate_log_density(log_density_p, flat_samples)
+    logprobq = _evaluate_log_density(log_density_q, flat_samples)
     if (not np.isfinite(logprobp).all() or np.isnan(logprobq).any()
             or np.isposinf(logprobq).any()):
         raise ValueError("log p must be finite and log q must not be NaN or positive infinity")
@@ -199,6 +208,45 @@ def estimate_kl_divergence(samples, log_density_p, log_density_q):
         "kl_divergence": divergence,
         "standard_error": float(np.sqrt(variance_mean)),
         "effective_sample_size": float(effective_sample_size),
+    }
+
+
+def estimate_mutual_information(
+    samples, log_density_joint, log_density_x, log_density_y, split_index=1,
+):
+    """Estimate mutual information in nats from joint draws and known densities.
+
+    Columns before ``split_index`` form X and the remaining columns form Y.
+    Samples have the same draw/chain layout as ``estimate_kl_divergence``.
+    Each normalized log-density callback receives a matrix and returns one
+    value per row. Marginal callbacks receive only their respective columns.
+    The supplied densities must describe the same joint distribution. No
+    marginal density fitting, independence assumption, or zero clipping is
+    performed. The KL estimator supplies chain-aware Monte Carlo uncertainty.
+    """
+    if np.ma.is_masked(samples) or np.iscomplexobj(samples):
+        raise ValueError("samples must contain unmasked real values")
+    values = np.asarray(samples, dtype=float)
+    if values.ndim not in (2, 3):
+        raise ValueError("samples must be draws-by-parameters or chains-by-draws-by-parameters")
+    if (isinstance(split_index, (bool, np.bool_))
+            or not isinstance(split_index, (int, np.integer))
+            or not 0 < split_index < values.shape[-1]):
+        raise ValueError("split_index must divide the columns into two nonempty groups")
+
+    def log_density_product(draws):
+        log_x = _evaluate_log_density(log_density_x, draws[:, :split_index])
+        log_y = _evaluate_log_density(log_density_y, draws[:, split_index:])
+        if any(np.isnan(density).any() or np.isposinf(density).any()
+               for density in (log_x, log_y)):
+            raise ValueError("marginal log densities must not be NaN or positive infinity")
+        return log_x + log_y
+
+    result = estimate_kl_divergence(values, log_density_joint, log_density_product)
+    return {
+        "mutual_information": result["kl_divergence"],
+        "standard_error": result["standard_error"],
+        "effective_sample_size": result["effective_sample_size"],
     }
 
 

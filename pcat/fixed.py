@@ -57,6 +57,8 @@ def sample_fixed_chains(state, log_likelihood, log_prior, names, scales, minima,
     ``return_state=True`` appends the final PCAT state, which holds the
     animation snapshots requested with ``numbframanim``. Extra keyword
     arguments, e.g. booladaptstdp, are passed to PCAT.
+    The returned draw axis follows retained samples, which can be shorter
+    than requested when convergence-based stopping is enabled.
     """
     if estimate_log_evidence and log_prior is not None:
         raise ValueError('Evidence needs a normalized prior; custom priors require a density and sampler.')
@@ -77,11 +79,13 @@ def sample_fixed_chains(state, log_likelihood, log_prior, names, scales, minima,
             strgcnfg='fixed_' + uuid4().hex[:16], typeverb=typeverb, **dictpcat,
         )
         chain = np.asarray(result.listpostparagenrscalbase).reshape(
-            sample_count, chain_count, -1
+            -1, chain_count, len(names)
         ).transpose(1, 0, 2)
         logprob = np.asarray(result.listpostlpostotl).reshape(
-            sample_count, chain_count
+            -1, chain_count
         ).T
+        if chain.shape[1] < 1 or chain.shape[:2] != logprob.shape:
+            raise ValueError('Completed parameter and log-probability chains must have the same nonzero number of draws.')
         outputs = (chain, logprob)
         if estimate_log_evidence:
             evidence = estimate_evidence(
@@ -160,7 +164,7 @@ def sample_allesfitter_pcat(datadir):
     with h5py.File(path, 'w') as output:
         group = output.create_group('mcmc')
         group.attrs.update(version='pcat-compat', nwalkers=walker_count,
-                           ndim=len(bounds), has_blobs=False, iteration=step_count)
+                   ndim=len(bounds), has_blobs=False, iteration=chain.shape[1])
         group.create_dataset('chain', data=chain.transpose(1, 0, 2), maxshape=(None, walker_count, len(bounds)))
         group.create_dataset('log_prob', data=logprob.T, maxshape=(None, walker_count))
         group.create_dataset('accepted', data=accepted)

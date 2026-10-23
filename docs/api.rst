@@ -121,6 +121,10 @@ Neural transdimensional proposals
    shape (chains, samples, parameters) with their log posteriors. Extra
    options, such as ``booladaptstdp``, pass through to PCAT.
 
+   The returned sample axis follows the completed state's retained draws.
+   Convergence-based stopping can make it shorter than ``sample_count``.
+   Parameter draws and log posteriors retain the same worker and sweep order.
+
 .. py:function:: pcat.sampling.sample_posterior(gdat, numbsampwalk, retr_llik, listnamepara, listlablpara, scalpara, minmpara, maxmpara, **options)
 
    Sample a fixed-dimensional posterior with PCAT chains and return a
@@ -482,6 +486,28 @@ Catalog analysis
    result includes an autocorrelation-aware standard error and effective sample
    size. Finite-sample estimates may be negative. If ``Q`` has zero density at
    any draw from ``P``, the estimated divergence is infinite.
+
+   Samples and log-density outputs must be unmasked real values. Each callback
+   must return one value per draw, rather than a scalar or column matrix.
+
+.. py:function:: pcat.diagnostics.estimate_mutual_information(samples, log_density_joint, log_density_x, log_density_y, split_index=1)
+
+   Estimate ``I(X;Y) = D_KL(p(X,Y) || p(X)p(Y))`` in nats using draws from the
+   joint distribution. Columns before ``split_index`` belong to ``X`` and the
+   remaining columns belong to ``Y``. Both groups must be nonempty. The sample
+   shape is ``(draws, parameters)`` or ``(chains, draws, parameters)``.
+
+   Supply normalized joint and marginal log-density callbacks for the same
+   distribution. The joint callback receives all columns. Marginal callbacks
+   receive only their respective columns and must each return one value per
+   row. The function does not estimate marginal densities from a sample cloud.
+
+   The returned dictionary contains ``mutual_information``, ``standard_error``,
+   and ``effective_sample_size``. Uncertainty accounts for within-chain
+   autocorrelation and variation between independent chains, as in the KL
+   estimator. Finite-sample estimates are not clipped at zero. Error estimates
+   do not establish that the chains have converged or that supplied density
+   callbacks are mutually consistent.
 
 Roman lens benchmark
 --------------------

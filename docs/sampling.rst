@@ -18,8 +18,8 @@ Proposal types
      - Main settings
    * - Within-model
      - Updates existing parameters without changing the number of elements.
-      It is the only proposal used by default when inference stays within one
-      model.
+       It is the only proposal used by default when inference stays within one
+       model.
      - ``stdvpropbase`` and ``stdvpropelemfire`` set unit-coordinate step
        scales. ``booladaptstdp=True`` adapts these scales during burn-in.
        ``probdemc`` mixes in differential-evolution steps and ``probstud``

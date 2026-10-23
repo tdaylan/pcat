@@ -385,7 +385,7 @@ inspect mixing. The run is too short to establish convergence.
 
 ![Variable planet-count posterior trace from simulated radial velocities](examples/variable_number_exoplanets_radial_velocity/visuals/element_count_trace.png)
 
-### KL divergence estimates
+### Information estimates
 
 Call ``pcat.diagnostics.estimate_kl_divergence`` when a forward KL estimate is
 needed. It computes the sample mean of ``log p - log q`` from PCAT draws from
@@ -393,6 +393,30 @@ needed. It computes the sample mean of ``log p - log q`` from PCAT draws from
 Monte Carlo error accounts for chain autocorrelation. Finite-sample estimates
 are not clipped at zero. The ``kl_divergence_gaussian`` example compares a PCAT
 posterior-to-prior estimate with the exact Gaussian value.
+
+For dependence between two parameter groups, use
+``pcat.diagnostics.estimate_mutual_information`` with normalized joint and
+marginal log densities. It estimates ``I(X;Y) = D_KL(p(X,Y) || p(X)p(Y))`` in
+nats from joint draws. Columns before ``split_index`` form the first group,
+and the remaining columns form the second. No marginal density is fitted
+automatically. Its Monte Carlo error uses the same chain-aware calculation as
+the KL estimate, and finite-sample estimates can be negative.
+
+The same Gaussian example evaluates both quantities from its PCAT chains and
+compares each with its analytic value. The first measures change from prior to
+posterior, while the second measures dependence within the posterior. These
+calculations alone do not establish chain convergence.
+
+```bash
+python examples/kl_divergence_gaussian/kl_divergence_gaussian.py
+```
+
+The [executed notebook](examples/kl_divergence_gaussian/kl_divergence_gaussian.ipynb)
+retains the sampled posterior, displays its summary, and generates both figures.
+
+![PCAT posterior-to-prior KL estimate and its Monte Carlo uncertainty compared with the analytic Gaussian value](docs/_static/kl_divergence_gaussian.png)
+
+![PCAT posterior parameter mutual-information estimate compared with the analytic correlated-Gaussian value](docs/_static/mutual_information_gaussian.png)
 
 ### Burn-in strategies
 

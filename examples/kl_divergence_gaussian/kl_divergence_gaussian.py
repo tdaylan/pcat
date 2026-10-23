@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
-"""Estimate posterior-to-prior KL divergence for a conjugate Gaussian example."""
+"""Estimate KL divergence and mutual information for a Gaussian PCAT posterior."""
 
 from tdpy.verbosity import print
 
 import argparse
-import builtins
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import multivariate_normal
+from scipy.stats import multivariate_normal, norm
 from tdpy.cli import add_plot_arguments
 
 from pcat.demo import configure_example_style, save_example_figure
-from pcat.diagnostics import estimate_kl_divergence
+from pcat.diagnostics import estimate_kl_divergence, estimate_mutual_information
 from pcat.fixed import sample_fixed_chains
 
 EXAMPLE_PATH = Path(__file__).resolve().parent
@@ -95,31 +94,59 @@ def run_example(sample_count=3000, burn_count=1000, chain_count=4, typefileplot=
         mean_post, covariance_post, PRIOR_MEAN, PRIOR_COVARIANCE
     )
     figure_path = plot_kl_comparison(estimate, analytic, typefileplot)
-    return {**estimate, "analytic_kl": analytic, "figure_path": figure_path}
+    mutual_information = estimate_mutual_information(
+        chains, distribution_post.logpdf,
+        lambda values: norm.logpdf(values[:, 0], loc=mean_post[0], scale=np.sqrt(covariance_post[0, 0])),
+        lambda values: norm.logpdf(values[:, 0], loc=mean_post[1], scale=np.sqrt(covariance_post[1, 1])),
+    )
+    correlation = covariance_post[0, 1] / np.sqrt(covariance_post[0, 0] * covariance_post[1, 1])
+    analytic_mutual_information = float(-0.5 * np.log1p(-correlation**2))
+    mutual_information_path = plot_information_comparison(
+        mutual_information["mutual_information"], mutual_information["standard_error"],
+        analytic_mutual_information, typefileplot, "mutual_information_gaussian",
+        r"Mutual information $I(X;Y)$ [nats]", "Posterior parameter dependence",
+    )
+    return {
+        **estimate, "analytic_kl": analytic, "figure_path": figure_path,
+        "chains": chains,
+        "mutual_information": mutual_information,
+        "analytic_mutual_information": analytic_mutual_information,
+        "mutual_information_figure_path": mutual_information_path,
+    }
 
 
 def plot_kl_comparison(estimate, analytic, typefileplot):
     """Plot PCAT's Monte Carlo estimate against the analytic Gaussian KL."""
+    return plot_information_comparison(
+        estimate["kl_divergence"], estimate["standard_error"], analytic,
+        typefileplot, "kl_divergence_gaussian",
+        r"Forward KL divergence $D_{KL}(P\Vert Q)$ [nats]", "Posterior vs prior",
+    )
+
+
+def plot_information_comparison(value, standard_error, analytic, typefileplot, name, ylabel, category):
+    """Compare a sampled information measure with its analytic Gaussian value."""
     figure, axis = plt.subplots(figsize=(5.6, 3.5))
     axis.axhline(analytic, color="#A51C30", ls="--", lw=1.5,
-                 label=f"Analytic Gaussian KL = {analytic:.3f} nats")
+                 label=f"Analytic Gaussian value = {analytic:.3f} nats")
     axis.errorbar(
         [0],
-        [estimate["kl_divergence"]],
-        yerr=[2.0 * estimate["standard_error"]],
+        [value],
+        yerr=[2.0 * standard_error],
         fmt="o",
         capsize=4,
         color="#007360",
         label="PCAT estimate ± 2 MCSE",
     )
-    axis.set_xticks([0], ["Posterior vs prior"])
-    axis.set_ylabel(r"Forward KL divergence $D_{KL}(P\Vert Q)$ [nats]")
-    axis.legend(loc="upper right", frameon=True, fancybox=True, framealpha=1.0)
+    axis.set_xticks([0], [category])
+    axis.set_ylabel(ylabel)
+    axis.legend(loc="lower center", bbox_to_anchor=(0.5, 1.02),
+                frameon=True, fancybox=True, framealpha=1.0)
     axis.grid(False)
     axis.spines[["top", "right"]].set_visible(False)
     figure.tight_layout()
     return save_example_figure(
-        figure, EXAMPLE_PATH, "kl_divergence_gaussian", typefileplot
+        figure, EXAMPLE_PATH, name, typefileplot
     )
 
 
@@ -134,11 +161,17 @@ def main():
     numbsamp = 250 if arguments.smoke else arguments.numbsamp
     numbburn = 200 if arguments.smoke else arguments.numbburn
     result = run_example(numbsamp, numbburn, arguments.numbproc, arguments.typefileplot)
-    builtins.print(
+    print(
         f"PCAT D_KL(posterior || prior) = {result['kl_divergence']:.4f} "
         f"± {result['standard_error']:.4f} MCSE; "
         f"analytic = {result['analytic_kl']:.4f} nats; "
         f"ESS = {result['effective_sample_size']:.0f}"
+    )
+    mutual_information = result["mutual_information"]
+    print(
+        f"PCAT I(x;y) = {mutual_information['mutual_information']:.4f} "
+        f"+/- {mutual_information['standard_error']:.4f} MCSE, "
+        f"analytic = {result['analytic_mutual_information']:.4f} nats"
     )
 
 

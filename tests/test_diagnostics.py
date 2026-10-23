@@ -560,6 +560,107 @@ def test_kl_divergence_reports_infinity_when_reference_has_zero_support():
     }
 
 
+@pytest.mark.parametrize('correlation', [-0.7, 0.0, 0.7])
+def test_mutual_information_matches_correlated_gaussian(correlation):
+    from scipy.stats import multivariate_normal, norm
+    from pcat.diagnostics import estimate_mutual_information
+
+    distribution = multivariate_normal(cov=[[1.0, correlation], [correlation, 1.0]])
+    samples = np.random.default_rng(601).multivariate_normal(
+        [0.0, 0.0], distribution.cov, size=(3, 2500),
+    )
+    result = estimate_mutual_information(
+        samples, distribution.logpdf,
+        lambda values: norm.logpdf(values[:, 0]),
+        lambda values: norm.logpdf(values[:, 0]),
+    )
+    analytic = -0.5 * np.log1p(-correlation**2)
+    assert abs(result['mutual_information'] - analytic) < 4 * result['standard_error'] + 1e-14
+    assert 0 < result['effective_sample_size'] <= samples.shape[0] * samples.shape[1]
+
+
+def test_mutual_information_handles_vector_groups_and_independence():
+    from scipy.stats import norm
+    from pcat.diagnostics import estimate_mutual_information
+
+    samples = np.random.default_rng(602).normal(size=(100, 4))
+    result = estimate_mutual_information(
+        samples,
+        lambda values: norm.logpdf(values[:, :2]).sum(axis=1) + norm.logpdf(values[:, 2:]).sum(axis=1),
+        lambda values: norm.logpdf(values).sum(axis=1),
+        lambda values: norm.logpdf(values).sum(axis=1),
+        split_index=2,
+    )
+    assert result == {'mutual_information': 0.0, 'standard_error': 0.0, 'effective_sample_size': 100.0}
+
+
+@pytest.mark.parametrize('split_index', [0, 2, -1, 0.5, True, None])
+def test_mutual_information_requires_two_nonempty_column_groups(split_index):
+    from pcat.diagnostics import estimate_mutual_information
+
+    with pytest.raises(ValueError, match='split_index'):
+        estimate_mutual_information(np.zeros((10, 2)), None, None, None, split_index)
+
+
+@pytest.mark.parametrize('field', ['samples', 'joint', 'x', 'y'])
+@pytest.mark.parametrize('kind', ['masked', 'complex'])
+def test_information_estimates_reject_discarded_masks_and_complex_values(field, kind):
+    from pcat.diagnostics import estimate_mutual_information
+
+    def invalid(values):
+        if kind == 'complex':
+            return values.astype(complex) + 1j
+        mask = np.zeros(values.shape, dtype=bool)
+        mask.flat[0] = True
+        return np.ma.array(values, mask=mask)
+
+    samples = np.zeros((10, 2))
+    callbacks = {name: (lambda values: np.zeros(len(values))) for name in ('joint', 'x', 'y')}
+    if field == 'samples':
+        samples = invalid(samples)
+    else:
+        callbacks[field] = lambda values: invalid(np.zeros(len(values)))
+    with pytest.raises(ValueError, match='unmasked real'):
+        estimate_mutual_information(samples, callbacks['joint'], callbacks['x'], callbacks['y'])
+
+
+@pytest.mark.parametrize('invalid_marginal', [np.nan, np.inf])
+def test_mutual_information_rejects_invalid_marginal_densities(invalid_marginal):
+    from pcat.diagnostics import estimate_mutual_information
+
+    with pytest.raises(ValueError, match='marginal log densities'):
+        estimate_mutual_information(
+            np.zeros((10, 2)), lambda values: np.zeros(len(values)),
+            lambda values: np.full(len(values), invalid_marginal),
+            lambda values: np.zeros(len(values)),
+        )
+
+
+@pytest.mark.parametrize('field', ['joint', 'x', 'y'])
+def test_mutual_information_rejects_wrong_callback_shapes(field):
+    from pcat.diagnostics import estimate_mutual_information
+
+    callbacks = {name: (lambda values: np.zeros(len(values))) for name in ('joint', 'x', 'y')}
+    callbacks[field] = lambda values: np.zeros((len(values), 1))
+    with pytest.raises(ValueError, match='one value per draw'):
+        estimate_mutual_information(np.zeros((10, 2)), callbacks['joint'], callbacks['x'], callbacks['y'])
+
+
+def test_mutual_information_preserves_negative_finite_sample_estimates():
+    from scipy.stats import multivariate_normal, norm
+    from pcat.diagnostics import estimate_mutual_information
+
+    samples = np.array([[1.0, -1.0], [1.0, -1.0]])
+    joint = multivariate_normal(cov=[[1.0, 0.5], [0.5, 1.0]])
+    result = estimate_mutual_information(
+        samples, joint.logpdf, lambda values: norm.logpdf(values[:, 0]),
+        lambda values: norm.logpdf(values[:, 0]),
+    )
+    expected = np.mean(joint.logpdf(samples) - norm.logpdf(samples).sum(axis=1))
+    assert expected < 0
+    assert result['mutual_information'] == pytest.approx(expected)
+
+
 def test_autocorrelation_distinguishes_independent_draws_and_random_walk():
     random = np.random.default_rng(42)
     independent = random.normal(size=(2000, 1))
