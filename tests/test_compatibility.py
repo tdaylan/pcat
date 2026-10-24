@@ -120,7 +120,8 @@ def test_retr_fromgdat_rejects_missing_posterior_model():
         retr_fromgdat(gdat, None, "pdfn", "fitt", "cntpmodl", "post")
 
 
-def test_count_scatter_skips_missing_optional_posterior_model(capsys):
+def test_count_scatter_skips_missing_optional_posterior_model(capsys, monkeypatch):
+    monkeypatch.setenv("TDPY_VERBOSITY", "1")
     gdat = SimpleNamespace(
         cntpdata=np.ones((1, 2, 1)),
         numbener=1,
@@ -183,7 +184,8 @@ def test_count_plot_uses_spectral_axis_and_line_centers(monkeypatch):
     ] == pytest.approx([0.5, 0.9])
 
 
-def test_generic_map_skips_missing_optional_posterior_product(capsys):
+def test_generic_map_skips_missing_optional_posterior_product(capsys, monkeypatch):
+    monkeypatch.setenv("TDPY_VERBOSITY", "1")
     gdat = SimpleNamespace(
         cntpdata=np.ones((1, 2, 1)),
         numbener=1,
@@ -195,7 +197,8 @@ def test_generic_map_skips_missing_optional_posterior_product(capsys):
     assert "skipping cntpresi map" in capsys.readouterr().out
 
 
-def test_show_paragenrscalfull_accepts_empty_element_indices(capsys):
+def test_show_paragenrscalfull_accepts_empty_element_indices(capsys, monkeypatch):
+    monkeypatch.setenv("TDPY_VERBOSITY", "1")
     model_state = SimpleNamespace(
         paragenrunitfull=np.array([0.5]),
         paragenrscalfull=np.array([0.5]),

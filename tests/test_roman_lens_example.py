@@ -19,6 +19,7 @@ SPECIFICATION.loader.exec_module(example)
 
 
 def test_roman_strong_lens_perturber_catalog_example_runs_pipeline(tmp_path, capsys, monkeypatch):
+    monkeypatch.setenv("TDPY_VERBOSITY", "1")
     monkeypatch.setitem(plt.rcParams, 'text.usetex', False)
     output_path = tmp_path / "roman_strong_lens_perturber_catalog.png"
 

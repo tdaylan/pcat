@@ -19,6 +19,7 @@ SPECIFICATION.loader.exec_module(example)
 
 
 def test_catalog_association_completeness_purity_example_writes_nonblank_figure(tmp_path, capsys, monkeypatch):
+    monkeypatch.setenv("TDPY_VERBOSITY", "1")
     monkeypatch.setitem(plt.rcParams, "text.usetex", False)
     output_path = tmp_path / "catalog_association_completeness_purity.png"
 
