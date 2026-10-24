@@ -509,6 +509,15 @@ Analysis utilities
 Interpreting examples
 ---------------------
 
+The ``psf_cubic_interpolation`` benchmark compares direct double-King profiles
+with the native cubic subpixel evaluator for 3 and 16 energy bins, two quality
+classes, and an 81-pixel cutout. It uses a synthetic 0.01-degree pixel scale
+with core and tail widths of two and four pixels. Construction cost and
+median repeated-evaluation times are reported separately. Random held-out
+subpixel shifts measure density error relative to the profile peak. Timing
+ratios are workload- and machine-dependent, and these kernel comparisons do
+not establish posterior equivalence or model adequacy for observed data.
+
 Generated examples are deterministic pipeline demonstrations unless their
 README explicitly states otherwise. Synthetic outputs validate computation and
 visualization but do not constitute measurements of real astrophysical systems.

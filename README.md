@@ -138,6 +138,44 @@ python examples/image_forward_model/image_forward_model.py --typefileplot png --
 
 Install `python -m pip install -e '.[bokeh]'` to create the interactive companion at `examples/image_forward_model/visuals/pcat_image_forward_model.html`.
 
+### Cubic subpixel PSF evaluation
+
+For Cartesian point-source images, `kernevaltype="bspx"` evaluates a cached
+ten-term cubic polynomial in source subpixel shifts. The default `"ulip"`
+evaluates the direct radial profile at each source-to-pixel separation. The
+selected-pixel calculation contracts the fitted coefficients, and they are
+rebuilt when the PSF changes.
+
+Sampled accuracy failures, negative or nonfinite polynomial values, and
+positions outside the table use direct evaluation. The sampled check uses
+0.1 percent of the profile peak and is not a uniform or likelihood-error
+bound. No flux renormalization or clipping is applied. Compare results with
+the direct path for the intended image, PSF width, and signal level.
+
+The benchmark separates setup time from repeated evaluation cost. In the
+synthetic double-King case, 600 evaluations were 1.4x faster for 3 energy bins
+and 3.7x faster for 16, with maximum held-out errors of $4.8\times10^{-4}$ of
+the profile peak. That case uses two quality classes, an 81-pixel cutout, a
+0.01-degree pixel scale, and core and tail widths of two and four pixels. This
+result is configuration- and workload-dependent; it does not establish
+posterior equivalence or adequacy for observed data. Savings depend on the
+energy/quality axes, source cutout size, and how often the PSF changes. The
+coefficient table grows with Cartesian grid span, so large images can have
+substantial memory and construction costs.
+
+```bash
+python examples/psf_cubic_interpolation/psf_cubic_interpolation.py --evaluations 600 --repeats 3
+python examples/psf_cubic_interpolation/psf_cubic_interpolation.py --evaluations 600 --repeats 3 --bokeh
+```
+
+![Cubic PSF construction cost and repeated direct versus fitted evaluation times](docs/_static/cubic_psf_cost.png)
+
+![Maximum absolute cubic PSF error relative to the profile peak over random subpixel shifts](docs/_static/cubic_psf_accuracy.png)
+
+The interactive timing and accuracy panels are available in
+[Bokeh HTML](docs/_static/cubic_psf_benchmark.html). The example writes the
+same view under its local ``visuals/`` directory when run with ``--bokeh``.
+
 ## Inference methods
 
 ### Fixed-dimensional inference

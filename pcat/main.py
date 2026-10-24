@@ -36,6 +36,7 @@ from collections import deque
 from copy import deepcopy
 from pathlib import Path
 from .likelihood import poisson_log_likelihood
+from .psf import CubicSubpixelPSF
 
 # utilities
 import os, time, sys, glob, fnmatch, inspect, traceback, functools, shutil, re
@@ -641,11 +642,13 @@ pdfn_self = tdpy.pdfn_self
 
 def retr_sbrtpnts(gdat, xpos, ypos, spec, psfnintp, indxpixlelem):
     """Return the surface brightness of one PSF-convolved point source."""
-    dist = retr_angldistunit(gdat, xpos, ypos, indxpixlelem)
     if gdat.kernevaltype == 'ulip':
+        dist = retr_angldistunit(gdat, xpos, ypos, indxpixlelem)
         psfntemp = psfnintp(dist)
     elif gdat.kernevaltype == 'bspx':
-        raise NotImplementedError('B-spline PSF evaluation is not implemented.')
+        if gdat.typepixl != 'cart' or not isinstance(psfnintp, CubicSubpixelPSF):
+            raise ValueError('bspx requires a fitted cubic Cartesian PSF')
+        psfntemp = psfnintp.evaluate(xpos, ypos, indxpixlelem)
     else:
         raise ValueError('Unknown PSF evaluation type: %s' % gdat.kernevaltype)
     return spec[:, None, None] * psfntemp
@@ -664,7 +667,7 @@ def retr_psfn(gdat, psfp, indxener, angl, typemodlpsfn, strgmodl='fitt'):
 class PointSpreadFunction:
     """Picklable PSF evaluated exactly at any angular separations [rad]."""
 
-    def __init__(self, gdat, psfp, typemodlpsfn, indxener=None):
+    def __init__(self, gdat, psfp, typemodlpsfn, indxener=None, use_cubic=None):
         self.numbpara = {'singgaus': 1, 'singking': 2, 'doubking': 5}[typemodlpsfn]
         self.typemodlpsfn = typemodlpsfn
         self.psfp = np.asarray(psfp, dtype=float).ravel()
@@ -681,8 +684,34 @@ class PointSpreadFunction:
                                 int(self.indxenerincl.max()) + 1)
         scal = getattr(gdat, 'fermscalfact', None) if gdat.typeexpr == 'ferm' else None
         self.scal = None if scal is None else np.asarray(scal, dtype=float)  # [rad]
+        self._cubic = None
+        if use_cubic is None:
+            use_cubic = getattr(gdat, 'kernevaltype', 'ulip') == 'bspx'
+        if use_cubic:
+            from scipy.interpolate import CubicSpline
+
+            self.psfp = self.psfp.copy()
+            self.scal = None if self.scal is None else self.scal.copy()
+            if getattr(gdat, 'typepixl', None) != 'cart':
+                raise ValueError('bspx requires Cartesian pixels')
+            radius = 2 * np.sqrt(2) * float(gdat.maxmgangdata) # [rad]
+            spacing = min(float(gdat.sizepixl) / 8, radius / 2048) # [rad]
+            if not np.isfinite(radius) or not np.isfinite(spacing) or min(radius, spacing) <= 0:
+                raise ValueError('Cubic PSF grid requires positive finite angular scales')
+            angles = np.linspace(0, radius, int(np.ceil(radius / spacing)) + 1) # [rad]
+            self._cubic = CubicSpline(angles, self._evaluate_exact(angles), axis=1, extrapolate=False)
 
     def __call__(self, angl):
+        if self._cubic is None:
+            return self._evaluate_exact(angl)
+        angles = np.asarray(angl, dtype=float).ravel() # [rad]
+        result = self._cubic(angles)
+        direct = (~np.isfinite(result) | (result < 0)).any(axis=(0, 2))
+        if direct.any():
+            result[:, direct, :] = self._evaluate_exact(angles[direct])
+        return result
+
+    def _evaluate_exact(self, angl):
         from tdpy.util import retr_doubking, retr_singgaus, retr_singking
 
         angl = np.asarray(angl, dtype=float).ravel()  # [rad]
@@ -10502,36 +10531,15 @@ def eval_modl(gdat, gdatmodi, strgstat, strgmodl, boolinit=False):
                 if gdat.booldiag:
                     if not np.isfinite(gmodstat.psfnintp(0.05)).all():
                         raise Exception('')
-            if gdat.typepixl == 'cart':
-                if gdat.kernevaltype == 'bspx':
-                    
-                    gmodstat.psfn = retr_psfn(gdat, psfp, gdat.indxener, gdat.blimpara.anglcart.flatten(), gmod.typemodlpsfn, strgmodl)
-                    
-                    # side length of the upsampled kernel
-                    gdat.numbsidekernusam = 100
-                    # side length of the original kernel
-                    gdat.numbsidekern = gdat.numbsidekernusam / factkernusam 
-                    gdat.indxsidekern = np.arange(gdat.numbsidekern)
-
-    	        	# pad by one row and one column
-    	        	#psf = np.zeros((gdat.numbsidekernusam+1, gdat.numbsidekernusam+1))
-    	        	#psf[0:gdat.numbsidekernusam, 0:gdat.numbsidekernusam] = psf0
-		        	
-    	        	# make design matrix for each factkernusam x factkernusam region
-                    nx = factkernusam + 1
-                    y, x = mgrid[0:nx, 0:nx] / float(factkernusam)
-                    x = x.flatten()
-                    y = y.flatten()
-                    kernmatrdesi = np.array([full(nx*nx, 1), x, y, x*x, x*y, y*y, x*x*x, x*x*y, x*y*y, y*y*y]).T
-    	        	
-                    # output np.array of coefficients
-                    gmodstat.psfnintp = np.empty((gdat.numbsidekern, gdat.numbsidekern, kernmatrdesi.shape[1]))
-
-    	        	# solve p = kernmatrdesi psfnintp for psfnintp
-                    for iy in gdat.indxsidekern:
-                        for ix in gdat.indxsidekern:
-                            p = psf[iy*factkernusam:(iy+1)*factkernusam+1, ix*factkernusam:(ix+1)*factkernusam+1].flatten()
-                            gmodstat.psfnintp[iy, ix, :] = dot(linalg.inv(dot(kernmatrdesi.T, kernmatrdesi)), dot(kernmatrdesi.T, p))
+            elif gdat.kernevaltype == 'bspx':
+                if gdat.typepixl != 'cart':
+                    raise ValueError('bspx requires Cartesian pixels')
+                gmodstat.psfnintp = CubicSubpixelPSF(
+                    PointSpreadFunction(gdat, psfp, gmod.typemodlpsfn, use_cubic=False),
+                    gdat.xposgrid, gdat.yposgrid, gdat.sizepixl,
+                )
+            else:
+                raise ValueError('Unknown PSF evaluation type: %s' % gdat.kernevaltype)
         else:
             gmodstat.psfnintp = gdat.fitt.this.psfnintp
     

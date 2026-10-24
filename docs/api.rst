@@ -432,6 +432,29 @@ Instrument response
    point-spread function. The returned coefficient columns reconstruct each
    detector pixel as a polynomial in subpixel offset.
 
+.. py:class:: pcat.psf.CubicSubpixelPSF(profile, x_coordinates, y_coordinates, pixel_size, relative_tolerance=1e-3)
+
+   Fit a total-degree-three polynomial in source subpixel shifts on a regular
+   Cartesian grid. The ten terms include all monomials through cubic order.
+   The radial ``profile`` callable returns an energy-by-position-by-quality
+   array. Coordinates and ``pixel_size`` use the same angular unit.
+
+   ``evaluate(xpos, ypos, pixel_indices)`` returns densities for the selected
+   grid pixels. Interleaved validation points exceeding the supplied fraction
+   of the profile peak mark a cell for direct evaluation. Negative/nonfinite
+   polynomial outputs and out-of-table positions also use the direct profile.
+   This sampled check is not a rigorous uniform bound. Values are not clipped
+   or renormalized. Calling the object on radial distances retains direct
+   profile inspection. Rebuild the object after changing the PSF.
+
+   Native Cartesian sampling selects this evaluator with
+   ``kernevaltype="bspx"``. The default ``"ulip"`` path remains direct.
+   ``PointSpreadFunction`` radial consumers also use cached cubic radial
+   interpolation under ``bspx``. The subpixel table is trained against an
+   explicitly exact profile rather than another interpolator. HealPix is not
+   supported by this option. Assess timing and approximation error for the
+   intended workload before enabling it.
+
 Example analyses
 ----------------
 

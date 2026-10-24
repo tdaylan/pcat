@@ -39,3 +39,29 @@ def test_readthedocs_embeds_maintained_visuals():
     for relative_path in visual_paths:
         assert f".. image:: {relative_path}" in source
         assert (DOCS_ROOT / relative_path).is_file()
+
+
+def test_readthedocs_documents_cubic_cartesian_psf_evaluation():
+    source = (DOCS_ROOT / "likelihoods.rst").read_text()
+    required_terms = (
+        'kernevaltype="ulip"',
+        'kernevaltype="bspx"',
+        'typepixl="cart"',
+        "uniform error bound",
+        "cubic_psf_cost.png",
+        "cubic_psf_accuracy.png",
+        "--bokeh",
+        "cubic_psf_benchmark.html",
+    )
+
+    assert all(term in source for term in required_terms)
+
+    readme = (REPOSITORY_ROOT / "README.md").read_text()
+    assert 'kernevaltype="bspx"' in readme
+    assert "does not establish" in readme
+    assert "adequacy for observed data" in readme
+    assert "docs/_static/cubic_psf_cost.png" in readme
+    assert "docs/_static/cubic_psf_accuracy.png" in readme
+    assert "docs/_static/cubic_psf_benchmark.html" in readme
+    assert ":download:`self-contained Bokeh document <_static/cubic_psf_benchmark.html>`" in source
+    assert (DOCS_ROOT / "_static" / "cubic_psf_benchmark.html").is_file()

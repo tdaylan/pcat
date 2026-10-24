@@ -111,6 +111,40 @@ fit. Fermi-LAT can also use its energy- and event-class-dependent PSF scale
 ``fermscalfact``. PSF and source-kernel options depend on pixelization and
 element type. Unsupported combinations should use ``typeevalpsfn="none"``.
 
+Subpixel evaluation
+~~~~~~~~~~~~~~~~~~~
+
+``kernevaltype="ulip"`` evaluates the selected PSF profile at each source-to-
+pixel angular separation. For Cartesian images, ``kernevaltype="bspx"`` instead
+fits a two-dimensional cubic polynomial in the source's subpixel shifts and
+evaluates its coefficients at the requested pixels. The fit is checked at
+interleaved phase samples; cells whose sampled error exceeds 0.1 percent of
+the profile peak use direct PSF evaluation. Nonfinite or negative polynomial
+values and pixels outside the fitted table also use direct evaluation. The
+sampled error check is not a uniform error bound, and the implementation does
+not renormalize or clip the fitted PSF. ``bspx`` requires ``typepixl="cart"``.
+
+The setup cost is paid once for each fitted PSF, so the speed depends on the
+number of source evaluations and the image configuration. The
+``psf_cubic_interpolation`` example measures setup and repeated evaluation
+times for synthetic double-King profiles, and compares the direct and cubic
+outputs over random subpixel shifts:
+
+.. code-block:: console
+
+  python examples/psf_cubic_interpolation/psf_cubic_interpolation.py --evaluations 600 --repeats 3 --bokeh
+
+.. image:: _static/cubic_psf_cost.png
+  :alt: One-time cubic setup and repeated direct and cubic PSF evaluation times for two synthetic energy-bin configurations
+
+.. image:: _static/cubic_psf_accuracy.png
+  :alt: Maximum cubic PSF density error relative to the profile peak for held-out random subpixel shifts
+
+The same run writes an interactive HTML companion to
+``examples/psf_cubic_interpolation/visuals/cubic_psf_benchmark.html``. The
+published interactive view is available as a
+:download:`self-contained Bokeh document <_static/cubic_psf_benchmark.html>`.
+
 Unbinned event-level likelihood
 -------------------------------
 
